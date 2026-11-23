@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS projects (
     slug TEXT UNIQUE NOT NULL,
     description TEXT,
     github_repo TEXT NOT NULL,
-    protected_files JSONB DEFAULT '["docker-compose.yml", ".env.example", "package.json", "tsconfig.json", "vite.config.ts"]'::jsonb,
+    protected_files JSONB DEFAULT '["app/Http/Middleware/HandleInertiaRequests.php", "vite.config.js", "composer.json", "package.json", "docker-compose.yml", ".env.example", "bootstrap/app.php"]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -83,11 +83,11 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO projects (id, name, slug, description, github_repo, protected_files)
 VALUES (
     'proj-1',
-    'Majastic Core App',
+    'Majastic Core App (Laravel Inertia)',
     'majastic-core',
-    'Platform utama internal Majastic untuk manajemen tugas & koordinasi tim',
+    'Platform utama internal Majastic berbasis Laravel 11, Inertia.js, dan Vue 3',
     'majastic/core-app',
-    '["docker-compose.yml", "docker-compose.prod.yml", ".env.example", "package.json", "tsconfig.json", "vite.config.ts", ".github/workflows/deploy.yml"]'::jsonb
+    '["app/Http/Middleware/HandleInertiaRequests.php", "vite.config.js", "composer.json", "package.json", "docker-compose.yml", "compose.yaml", ".env.example", "bootstrap/app.php"]'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
 

@@ -34,7 +34,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [title, setTitle] = useState('');
   const [type, setType] = useState<TaskType>('ENDPOINT');
   const [method, setMethod] = useState<HttpMethod>('POST');
-  const [route, setRoute] = useState('/api/v1/');
+  const [route, setRoute] = useState('/');
   const [assigneeId, setAssigneeId] = useState(users[1]?.id || users[0]?.id || '');
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
     setTitle('');
     setType('ENDPOINT');
-    setRoute('/api/v1/');
+    setRoute('/');
     setSearchQuery('');
     setIsPickerOpen(false);
     onClose();
@@ -251,10 +251,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               onChange={(e) => setTitle(e.target.value)}
               placeholder={
                 type === 'ENDPOINT'
-                  ? 'Contoh: Endpoint Registrasi & Validasi Schema'
+                  ? 'Contoh: Controller & Route Login (AuthenticatedSessionController@store)'
                   : type === 'UI_SLICING'
-                  ? 'Contoh: Slicing Halaman Dashboard + State Error'
-                  : 'Contoh: Setup docker database lokal'
+                  ? 'Contoh: Slicing Vue Pages/Auth/Login.vue'
+                  : 'Contoh: Setup docker-compose PostgreSQL lokal'
               }
               className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-xs"
             />
