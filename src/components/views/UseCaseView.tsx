@@ -3,19 +3,16 @@
 import React from 'react';
 import { UseCase, Task, User } from '@/types';
 import { 
-  Target, 
   Palette, 
   ExternalLink, 
   Plus, 
-  Code2, 
   CheckCircle2, 
-  Layers,
-  ArrowRight
+  Archive
 } from 'lucide-react';
 
 interface UseCaseViewProps {
   useCases: UseCase[];
-  tasks: Task[];
+  tasks: Task[]; // Receives all tasks (including historical/archived ones)
   users: User[];
   onOpenAddUseCaseModal: () => void;
   onOpenAddTaskModal: (useCaseId: string) => void;
@@ -53,9 +50,11 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
       {/* Use Cases Cards */}
       <div className="space-y-6">
         {useCases.map((uc) => {
+          // Calculates progress across ALL tasks for this Use Case (persisted even when archived from Kanban!)
           const ucTasks = tasks.filter((t) => t.useCaseId === uc.id);
           const doneTasks = ucTasks.filter((t) => t.status === 'DONE').length;
           const isComplete = ucTasks.length > 0 && doneTasks === ucTasks.length;
+          const percent = ucTasks.length > 0 ? Math.round((doneTasks / ucTasks.length) * 100) : 0;
 
           return (
             <div
@@ -73,12 +72,12 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
                     {isComplete && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
                         <CheckCircle2 className="w-3 h-3" />
-                        Selesai
+                        100% Selesai
                       </span>
                     )}
                   </div>
                   <div className="text-xs text-slate-400">
-                    Progres: {doneTasks} dari {ucTasks.length} tugas teknis selesai
+                    Progres Keseluruhan: {doneTasks} dari {ucTasks.length} tugas teknis selesai ({percent}%)
                   </div>
                 </div>
 
@@ -127,7 +126,15 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
                         className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between text-xs"
                       >
                         <div className="space-y-1">
-                          <div className="font-semibold text-slate-800">{t.title}</div>
+                          <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                            <span>{t.title}</span>
+                            {t.isArchived && (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] text-slate-400 bg-slate-200 px-1 rounded">
+                                <Archive className="w-2.5 h-2.5" />
+                                Arsip
+                              </span>
+                            )}
+                          </div>
                           {t.type === 'ENDPOINT' && t.endpointSpec ? (
                             <span className="font-mono text-[10px] text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                               <span className="font-bold text-sky-700">{t.endpointSpec.method}</span> {t.endpointSpec.route}

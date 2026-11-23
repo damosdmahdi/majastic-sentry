@@ -3,12 +3,11 @@
 import React from 'react';
 import { User } from '@/types';
 import { 
-  ShieldCheck, 
   Kanban, 
   Target, 
   ShieldAlert, 
   FileText,
-  UserCheck
+  RotateCw
 } from 'lucide-react';
 
 export type NavTab = 'board' | 'usecases' | 'guardrail' | 'obsidian';
@@ -20,6 +19,9 @@ interface HeaderProps {
   onSwitchUser: (user: User) => void;
   users: User[];
   projectName: string;
+  isSyncing: boolean;
+  onManualSync: () => void;
+  lastSyncedText: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,13 +31,16 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchUser,
   users,
   projectName,
+  isSyncing,
+  onManualSync,
+  lastSyncedText,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo Brand */}
+          {/* Logo Brand & Sync Status */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
               M
@@ -46,6 +51,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                   {projectName}
                 </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
+                <span>{lastSyncedText}</span>
+                <button
+                  onClick={onManualSync}
+                  title="Sinkronisasi data sekarang"
+                  className="p-0.5 hover:text-slate-600 rounded transition-colors"
+                >
+                  <RotateCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin text-sky-600' : ''}`} />
+                </button>
               </div>
             </div>
           </div>

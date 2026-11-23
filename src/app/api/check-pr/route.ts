@@ -22,8 +22,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nomor PR atau URL PR GitHub tidak valid' }, { status: 400 });
     }
 
-    const projects = db.getProjects();
-    const project = projects[0]; // Active project
+    const data = await db.getAll();
+    const project = data.projects[0]; // Active project
     const protectedFiles = project?.protectedFiles || ['docker-compose.yml', '.env.example', 'package.json'];
 
     const result = await inspectPullRequest({
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     // If taskId is provided, update task with result
     if (taskId) {
-      db.updateTask(taskId, {
+      await db.updateTask(taskId, {
         githubPrUrl: prUrl || `https://github.com/${targetRepo || project?.githubRepo}/pull/${targetPrNumber}`,
         prNumber: targetPrNumber,
         integrityCheck: result,

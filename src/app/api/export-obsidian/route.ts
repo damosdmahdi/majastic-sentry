@@ -6,11 +6,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const format = searchParams.get('format'); // 'json' or 'download'
 
-  const projects = db.getProjects();
-  const milestones = db.getMilestones();
-  const useCases = db.getUseCases();
-  const tasks = db.getTasks();
-  const users = db.getUsers();
+  const data = await db.getAll();
+  const { projects, milestones, useCases, tasks, users } = data;
 
   const project = projects[0];
   const milestone = milestones[0];

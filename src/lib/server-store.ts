@@ -6,7 +6,7 @@ import {
   INITIAL_TASKS,
   INITIAL_USERS,
 } from './initial-data';
-import { getSupabaseClient, isSupabaseConfigured } from './supabase';
+import { getSupabaseClient } from './supabase';
 
 interface GlobalStore {
   projects: Project[];
@@ -47,7 +47,7 @@ export const db = {
           supabase.from('projects').select('*'),
           supabase.from('milestones').select('*'),
           supabase.from('use_cases').select('*'),
-          supabase.from('tasks').select('*').eq('is_archived', false),
+          supabase.from('tasks').select('*'), // Fetch all tasks including is_archived so Use Case progress remains accurate!
         ]);
 
         if (!usersRes.error && usersRes.data?.length) {
@@ -99,7 +99,7 @@ export const db = {
               githubPrUrl: t.github_pr_url,
               prNumber: t.pr_number,
               integrityCheck: t.integrity_check,
-              isArchived: t.is_archived,
+              isArchived: Boolean(t.is_archived),
               lastUpdatedAt: t.last_updated_at,
               reviewedAt: t.reviewed_at,
               createdAt: t.created_at,
@@ -118,14 +118,14 @@ export const db = {
       projects: local.projects,
       milestones: local.milestones,
       useCases: local.useCases,
-      tasks: local.tasks.filter((t) => !t.isArchived),
+      tasks: local.tasks,
     };
   },
 
   getProjects: () => getLocalStore().projects,
   getMilestones: () => getLocalStore().milestones,
   getUseCases: () => getLocalStore().useCases,
-  getTasks: () => getLocalStore().tasks.filter((t) => !t.isArchived),
+  getTasks: () => getLocalStore().tasks,
   getUsers: () => getLocalStore().users,
 
   // ==========================================

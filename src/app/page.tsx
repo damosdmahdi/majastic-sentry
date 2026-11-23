@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Project, 
   Milestone, 
@@ -40,6 +40,10 @@ export default function HomePage() {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]); // Default to Mentor
 
+  // Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
+
   // Modals state
   const [isAddUseCaseModalOpen, setIsAddUseCaseModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
@@ -54,25 +58,41 @@ export default function HomePage() {
   const activeProject = projects[0] || INITIAL_PROJECTS[0];
   const activeMilestone = milestones[0] || INITIAL_MILESTONES[0];
 
-  // Fetch initial data from server API on mount
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch('/api/data');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.projects?.length) setProjects(data.projects);
-          if (data.milestones?.length) setMilestones(data.milestones);
-          if (data.useCases?.length) setUseCases(data.useCases);
-          if (data.tasks) setTasks(data.tasks);
-          if (data.users?.length) setUsers(data.users);
-        }
-      } catch (err) {
-        console.warn('Using client-side fallback store:', err);
+  // Fetch / Sync Data function
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsSyncing(true);
+    try {
+      const res = await fetch('/api/data');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.projects?.length) setProjects(data.projects);
+        if (data.milestones?.length) setMilestones(data.milestones);
+        if (data.useCases?.length) setUseCases(data.useCases);
+        if (data.tasks) setTasks(data.tasks);
+        if (data.users?.length) setUsers(data.users);
+        setLastSyncedTime(new Date());
       }
+    } catch (err) {
+      console.warn('Sync failed, using existing store:', err);
+    } finally {
+      if (!isSilent) setIsSyncing(false);
     }
-    loadData();
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Auto-polling interval every 20 seconds if window is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchData(true);
+      }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   // Update Task Status
   const handleUpdateTaskStatus = async (taskId: string, newStatus: TaskStatus, blockerNote?: string) => {
@@ -80,9 +100,14 @@ export default function HomePage() {
       status: newStatus,
       lastUpdatedAt: new Date().toISOString(),
     };
-    if (blockerNote !== undefined) {
-      patch.blockerNote = blockerNote;
+
+    if (newStatus === 'BLOCKED') {
+      if (blockerNote !== undefined) patch.blockerNote = blockerNote;
+    } else {
+      // If moving away from BLOCKED to IN_PROGRESS, REVIEW, or DONE, clear the blocker note
+      patch.blockerNote = undefined;
     }
+
     if (newStatus === 'DONE') {
       patch.reviewedAt = new Date().toISOString();
     }
@@ -150,8 +175,9 @@ export default function HomePage() {
 
   // Archive Completed Tasks (Sprint Cutoff)
   const handleArchiveCompletedTasks = async () => {
-    // Optimistic UI update: remove all DONE tasks from board
-    setTasks((prev) => prev.filter((t) => t.status !== 'DONE'));
+    setTasks((prev) =>
+      prev.map((t) => (t.status === 'DONE' ? { ...t, isArchived: true } : t))
+    );
 
     try {
       await fetch('/api/tasks', {
@@ -185,6 +211,7 @@ export default function HomePage() {
               ...t,
               githubPrUrl: prUrl,
               prNumber,
+              status: 'REVIEW', // Automatically advance to Review after PR is verified!
               integrityCheck: result,
               lastUpdatedAt: new Date().toISOString(),
             }
@@ -205,7 +232,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-slate-900 selection:text-white">
       
-      {/* Calm Header Navigation */}
+      {/* Calm Header Navigation with Live Sync */}
       <Header
         currentTab={currentTab}
         onTabChange={setCurrentTab}
@@ -213,6 +240,9 @@ export default function HomePage() {
         onSwitchUser={setCurrentUser}
         users={users}
         projectName={activeProject.name}
+        isSyncing={isSyncing}
+        onManualSync={() => fetchData(false)}
+        lastSyncedText={`Sinkron: ${lastSyncedTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`}
       />
 
       {/* Main Content Area based on Selected Tab */}

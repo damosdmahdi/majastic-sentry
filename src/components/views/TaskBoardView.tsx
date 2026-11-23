@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   ShieldAlert, 
   Archive,
-  ExternalLink
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 
 interface TaskBoardViewProps {
@@ -41,19 +42,46 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   const [onlyMyTasks, setOnlyMyTasks] = useState(false);
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('ALL');
   const [isConfirmArchiveOpen, setIsConfirmArchiveOpen] = useState(false);
+  const [mentorOnlyNotice, setMentorOnlyNotice] = useState<string | null>(null);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
   const useCaseMap = new Map(useCases.map((uc) => [uc.id, uc]));
   const now = new Date();
 
-  // Filter tasks
-  const displayedTasks = tasks.filter((t) => {
+  // Filter tasks (Only unarchived tasks for current active sprint board!)
+  const activeTasks = tasks.filter((t) => !t.isArchived);
+
+  const displayedTasks = activeTasks.filter((t) => {
     if (onlyMyTasks && t.assigneeId !== currentUser.id) return false;
     if (selectedUserFilter !== 'ALL' && t.assigneeId !== selectedUserFilter) return false;
     return true;
   });
 
   const doneCount = displayedTasks.filter((t) => t.status === 'DONE').length;
+
+  const handleStatusChange = (task: Task, newStatus: TaskStatus) => {
+    // Rule 1: Only Mentor can approve to DONE
+    if (newStatus === 'DONE' && currentUser.role !== 'MENTOR') {
+      setMentorOnlyNotice('Otorisasi Ditolak: Hanya Mentor (Lead) yang dapat menyetujui tugas selesai (Done). Silakan ajukan ke "Review Mentor" terlebih dahulu.');
+      setTimeout(() => setMentorOnlyNotice(null), 4000);
+      return;
+    }
+
+    // Rule 2: Moving to REVIEW requires a GitHub PR Link
+    if (newStatus === 'REVIEW' && !task.githubPrUrl) {
+      onOpenCheckPrModal(task);
+      return;
+    }
+
+    // Rule 3: Moving to BLOCKED opens Blocker Modal
+    if (newStatus === 'BLOCKED') {
+      onOpenBlockerModal(task);
+      return;
+    }
+
+    // Rule 4: Moving away from BLOCKED to IN_PROGRESS or REVIEW or DONE clears active blocker
+    onUpdateTaskStatus(task.id, newStatus);
+  };
 
   const columns: { id: TaskStatus; title: string; count: number; color: string }[] = [
     {
@@ -65,7 +93,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     {
       id: 'IN_PROGRESS',
       title: 'Sedang Dikerjakan',
-      count: displayedTasks.filter((t) => t.status === 'IN_PROGRESS').length,
+      count: displayedTasks.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'BLOCKED').length,
       color: 'bg-sky-100 text-sky-800',
     },
     {
@@ -76,7 +104,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     },
     {
       id: 'DONE',
-      title: 'Selesai',
+      title: 'Selesai (Approved)',
       count: doneCount,
       color: 'bg-emerald-100 text-emerald-800',
     },
@@ -85,6 +113,19 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
+      {/* Alert Banner for Mentor-Only Action */}
+      {mentorOnlyNotice && (
+        <div className="bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl text-xs flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{mentorOnlyNotice}</span>
+          </div>
+          <button onClick={() => setMentorOnlyNotice(null)} className="font-bold text-amber-700 hover:text-amber-900">
+            Tutup
+          </button>
+        </div>
+      )}
+
       {/* Top Filter & Calm Action Bar */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
         
@@ -301,25 +342,20 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                             </span>
                           </div>
 
-                          {/* Quick Status Select */}
+                          {/* Quick Status Select with Role Enforcement */}
                           <select
                             aria-label={`Pindahkan status untuk ${task.title}`}
                             value={task.status}
-                            onChange={(e) => {
-                              const newStatus = e.target.value as TaskStatus;
-                              if (newStatus === 'BLOCKED') {
-                                onOpenBlockerModal(task);
-                              } else {
-                                onUpdateTaskStatus(task.id, newStatus);
-                              }
-                            }}
+                            onChange={(e) => handleStatusChange(task, e.target.value as TaskStatus)}
                             className="text-[11px] font-semibold py-1 px-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 cursor-pointer hover:bg-slate-100"
                           >
                             <option value="TODO">To Do</option>
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="BLOCKED">🚨 Blocked</option>
-                            <option value="REVIEW">Review</option>
-                            <option value="DONE">Done</option>
+                            <option value="REVIEW">Review Mentor</option>
+                            <option value="DONE" disabled={currentUser.role !== 'MENTOR'}>
+                              {currentUser.role === 'MENTOR' ? '✅ Done (Approve)' : '🔒 Done (Hanya Mentor)'}
+                            </option>
                           </select>
 
                         </div>
