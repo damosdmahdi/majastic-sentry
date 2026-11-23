@@ -71,18 +71,18 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div className="px-5 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
               <GitPullRequest className="w-4 h-4" />
             </div>
             <div>
               <h2 className="font-bold text-slate-900 text-sm">Guardrail & Integrity Checker</h2>
-              <p className="text-xs text-slate-500">Inspeksi diff Pull Request GitHub terhadap file terproteksi</p>
+              <p className="text-[11px] sm:text-xs text-slate-500">Inspeksi diff Pull Request GitHub terhadap file terproteksi</p>
             </div>
           </div>
           <button
@@ -94,7 +94,7 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 text-xs">
+        <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
           
           {/* Target Task Summary */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">

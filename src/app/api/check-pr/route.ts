@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { inspectPullRequest } from '@/lib/github-checker';
 import { db } from '@/lib/server-store';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const { taskId, repo, prNumber, prUrl } = await req.json();

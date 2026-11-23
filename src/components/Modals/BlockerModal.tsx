@@ -31,18 +31,18 @@ export const BlockerModal: React.FC<BlockerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-rose-100 flex items-center justify-between bg-rose-50/80">
+        <div className="px-5 sm:px-6 py-4 border-b border-rose-100 flex items-center justify-between bg-rose-50/80 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
               <AlertOctagon className="w-4 h-4" />
             </div>
             <div>
               <h2 className="font-bold text-rose-950 text-sm">Laporkan Kendala (Blocker)</h2>
-              <p className="text-xs text-rose-600">Mentor akan langsung menerima notifikasi bantuan ini</p>
+              <p className="text-[11px] sm:text-xs text-rose-600">Mentor akan langsung menerima notifikasi bantuan ini</p>
             </div>
           </div>
           <button
@@ -54,7 +54,7 @@ export const BlockerModal: React.FC<BlockerModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
           
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Tugas</span>

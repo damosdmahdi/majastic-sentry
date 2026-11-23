@@ -111,31 +111,31 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-5 sm:space-y-6">
       
       {/* Alert Banner for Mentor-Only Action */}
       {mentorOnlyNotice && (
-        <div className="bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl text-xs flex items-center justify-between shadow-sm animate-in fade-in">
+        <div className="bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl text-xs flex items-center justify-between shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-600 shrink-0" />
             <span>{mentorOnlyNotice}</span>
           </div>
-          <button onClick={() => setMentorOnlyNotice(null)} className="font-bold text-amber-700 hover:text-amber-900">
+          <button onClick={() => setMentorOnlyNotice(null)} className="font-bold text-amber-700 hover:text-amber-900 p-1">
             Tutup
           </button>
         </div>
       )}
 
-      {/* Top Filter & Calm Action Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
+      {/* Top Filter & Calm Action Bar (Responsive Wrap) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
         
         {/* Left: Focus Toggle & Team Filter */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setOnlyMyTasks(!onlyMyTasks)}
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border shrink-0 ${
               onlyMyTasks
-                ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
                 : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
             }`}
           >
@@ -144,12 +144,12 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
           </button>
 
           <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <span>Filter Tim:</span>
+            <span className="hidden xs:inline">Filter:</span>
             <select
               aria-label="Filter berdasarkan anggota tim"
               value={selectedUserFilter}
               onChange={(e) => setSelectedUserFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-slate-800 text-xs py-1 px-2 rounded-lg cursor-pointer"
+              className="bg-slate-50 border border-slate-200 text-slate-800 text-xs py-1.5 px-2 rounded-xl cursor-pointer max-w-[140px] sm:max-w-none truncate"
             >
               <option value="ALL">Semua Anggota</option>
               {users.map((u) => (
@@ -162,21 +162,21 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
           {doneCount > 0 && (
             <button
               onClick={() => setIsConfirmArchiveOpen(true)}
               title="Arsipkan tugas selesai setelah diekspor ke Obsidian"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition-all"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition-all"
             >
               <Archive className="w-3.5 h-3.5 text-slate-500" />
-              <span>Arsipkan Selesai ({doneCount})</span>
+              <span>Arsipkan ({doneCount})</span>
             </button>
           )}
 
           <button
             onClick={onOpenAddTaskModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Tugas</span>
@@ -185,8 +185,10 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
 
       </div>
 
-      {/* 4-Column Calm Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 4-Column Responsive Kanban Board
+          - Mobile / Tablet: Smooth horizontal swipeable container with snap-center
+          - Desktop (lg): 4-column balanced grid */}
+      <div className="flex lg:grid lg:grid-cols-4 gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
         {columns.map((col) => {
           const colTasks = displayedTasks.filter((t) => {
             if (col.id === 'IN_PROGRESS') {
@@ -196,7 +198,10 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
           });
 
           return (
-            <div key={col.id} className="flex flex-col bg-slate-100/70 rounded-2xl p-3.5 min-h-[500px] border border-slate-200/60">
+            <div 
+              key={col.id} 
+              className="flex flex-col bg-slate-100/70 rounded-2xl p-3.5 min-h-[460px] sm:min-h-[500px] border border-slate-200/60 w-[85vw] max-w-[340px] sm:w-[320px] lg:w-auto shrink-0 snap-center"
+            >
               
               {/* Column Header */}
               <div className="flex items-center justify-between px-1 mb-3">
@@ -209,7 +214,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
               </div>
 
               {/* Cards Container */}
-              <div className="space-y-3 flex-1 overflow-y-auto">
+              <div className="space-y-3 flex-1 overflow-y-auto pr-0.5">
                 {colTasks.length === 0 ? (
                   <div className="h-32 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-xs text-slate-400">
                     Tidak ada tugas
@@ -226,7 +231,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                     return (
                       <div
                         key={task.id}
-                        className={`bg-white rounded-xl p-4 border transition-all shadow-sm hover:shadow-md hover:border-slate-300 ${
+                        className={`bg-white rounded-xl p-3.5 sm:p-4 border transition-all shadow-xs hover:shadow-md hover:border-slate-300 ${
                           task.status === 'BLOCKED'
                             ? 'border-rose-300 bg-rose-50/20'
                             : 'border-slate-200/80'
@@ -237,7 +242,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                           <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>{useCase.code}</span>
                             <span>•</span>
-                            <span className="truncate max-w-[150px]">{useCase.title}</span>
+                            <span className="truncate max-w-[140px]">{useCase.title}</span>
                           </div>
                         )}
 
@@ -248,16 +253,16 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
 
                         {/* Endpoint or UI Spec Badge */}
                         {task.type === 'ENDPOINT' && task.endpointSpec && (
-                          <div className="font-mono text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded-md mb-2.5 inline-block">
+                          <div className="font-mono text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded-md mb-2.5 inline-block max-w-full truncate">
                             <span className="font-bold text-sky-700 mr-1">{task.endpointSpec.method}</span>
-                            <span>{task.endpointSpec.route}</span>
+                            <span className="truncate">{task.endpointSpec.route}</span>
                           </div>
                         )}
 
                         {task.type === 'UI_SLICING' && (
                           <div className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md mb-2.5 inline-flex items-center gap-1">
                             <Palette className="w-3 h-3" />
-                            <span>UI Slicing</span>
+                            <span>Vue Slicing</span>
                           </div>
                         )}
 
@@ -265,7 +270,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                         {task.status === 'BLOCKED' && (
                           <div className="bg-rose-50 border border-rose-200 text-rose-800 text-[11px] p-2 rounded-lg mb-2 flex items-start gap-1.5">
                             <AlertOctagon className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
-                            <div>
+                            <div className="leading-snug">
                               <span className="font-bold">Terkendala:</span> {task.blockerNote}
                             </div>
                           </div>
@@ -282,7 +287,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                         {/* Pull Request & Guardrail Trigger (Connected Directly on the Card!) */}
                         <div className="pt-1 pb-2 border-t border-slate-100 my-1 flex flex-wrap items-center justify-between gap-1 text-[11px]">
                           {task.githubPrUrl ? (
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <a
                                 href={task.githubPrUrl}
                                 target="_blank"
@@ -317,14 +322,14 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                               className="text-[11px] text-purple-700 hover:text-purple-800 font-medium inline-flex items-center gap-1"
                             >
                               <GitPullRequest className="w-3 h-3 text-purple-600" />
-                              <span>+ Tautkan PR GitHub</span>
+                              <span>+ Tautkan PR</span>
                             </button>
                           )}
 
                           {task.githubPrUrl && (
                             <button
                               onClick={() => onOpenCheckPrModal(task)}
-                              className="text-[10px] text-slate-400 hover:text-slate-600 underline"
+                              className="text-[10px] text-slate-400 hover:text-slate-600 underline ml-auto"
                             >
                               Uji Ulang
                             </button>
@@ -332,12 +337,12 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                         </div>
 
                         {/* Card Footer: Assignee & Move Status */}
-                        <div className="flex items-center justify-between pt-1 text-xs">
+                        <div className="flex items-center justify-between pt-1 text-xs gap-2">
                           
                           {/* Assignee */}
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <span className="text-sm">{assignee?.avatar || '👤'}</span>
-                            <span className="text-[11px] font-medium truncate max-w-[90px]">
+                          <div className="flex items-center gap-1 text-slate-600 min-w-0">
+                            <span className="text-sm shrink-0">{assignee?.avatar || '👤'}</span>
+                            <span className="text-[11px] font-medium truncate">
                               {assignee?.name.split(' ')[0] || 'Unassigned'}
                             </span>
                           </div>
@@ -347,14 +352,14 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                             aria-label={`Pindahkan status untuk ${task.title}`}
                             value={task.status}
                             onChange={(e) => handleStatusChange(task, e.target.value as TaskStatus)}
-                            className="text-[11px] font-semibold py-1 px-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 cursor-pointer hover:bg-slate-100"
+                            className="text-[11px] font-semibold py-1 px-1.5 sm:px-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 cursor-pointer hover:bg-slate-100 shrink-0 max-w-[130px] sm:max-w-none truncate"
                           >
                             <option value="TODO">To Do</option>
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="BLOCKED">🚨 Blocked</option>
-                            <option value="REVIEW">Review Mentor</option>
+                            <option value="REVIEW">Review</option>
                             <option value="DONE" disabled={currentUser.role !== 'MENTOR'}>
-                              {currentUser.role === 'MENTOR' ? '✅ Done (Approve)' : '🔒 Done (Hanya Mentor)'}
+                              {currentUser.role === 'MENTOR' ? '✅ Done' : '🔒 Done (Mentor)'}
                             </option>
                           </select>
 
@@ -374,7 +379,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
       {/* Confirmation Modal: Archive Done Tasks */}
       {isConfirmArchiveOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-xl border border-slate-200">
             <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center">
               <Archive className="w-5 h-5" />
             </div>
@@ -387,7 +392,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setIsConfirmArchiveOpen(false)}
-                className="px-3.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-3.5 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl"
               >
                 Batal
               </button>
@@ -396,7 +401,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                   onArchiveCompletedTasks();
                   setIsConfirmArchiveOpen(false);
                 }}
-                className="px-3.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm"
+                className="px-3.5 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs"
               >
                 Ya, Arsipkan
               </button>
