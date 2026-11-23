@@ -10,10 +10,15 @@ export interface GenerateMarkdownParams {
 }
 
 export function generateObsidianWeeklyMarkdown(params: GenerateMarkdownParams): string {
-  const { project, milestone, useCases, tasks, users, weekLabel } = params;
+  const { project, milestone, useCases, tasks, users } = params;
 
   const now = new Date();
-  const currentWeek = weekLabel || getWeekNumberString(now);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const dateIso = `${year}-${month}-${day}`;
+  const dateFormatted = now.toLocaleDateString('id-ID', { dateStyle: 'full' });
+
   const userMap = new Map(users.map((u) => [u.id, u]));
 
   // Metrics (Only active / unarchived tasks for current sprint review)
@@ -33,33 +38,33 @@ export function generateObsidianWeeklyMarkdown(params: GenerateMarkdownParams): 
   );
 
   let md = `---
-type: weekly-sprint-review
+type: team-mentoring-review
 project: "${project.name}"
 github_repo: "${project.githubRepo}"
 milestone: "${milestone.title}"
 sdlc_model: "${milestone.sdlcType}"
-week: "${currentWeek}"
-generated_at: "${now.toISOString().slice(0, 10)}"
+date: "${dateIso}"
+exported_at: "${now.toISOString()}"
 tags:
   - mentoring
   - majastic
-  - weekly-review
-  - sprint-review
+  - team-review
+  - daily-sprint
 ---
 
-# 📊 Laporan Mingguan & Evaluasi Mentoring (${currentWeek})
+# 📊 Laporan Progres & Evaluasi Mentoring (${dateIso})
 **Proyek:** [[${project.name}]] | **Repositori:** \`${project.githubRepo}\`  
-**Milestone:** ${milestone.title} (${milestone.sdlcType === 'AGILE_SPRINT' ? 'Scrum Sprint' : 'Waterfall Phase'})  
-**Tanggal Ekspor:** ${now.toLocaleDateString('id-ID', { dateStyle: 'full' })}
+**Milestone:** ${milestone.title}  
+**Waktu Penarikan:** ${dateFormatted} (${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})
 
 ---
 
-## 📈 Ringkasan Metrik Minggu Ini
+## 📈 Ringkasan Metrik Saat Penarikan
 | Kategori | Jumlah | Keterangan |
 | :--- | :--- | :--- |
 | **Total Tugas Aktif** | ${totalTasks} | Tersebar di ${useCases.length} Use Case |
-| **Selesai (Done)** | ${doneTasks.length} (${Math.round((doneTasks.length / (totalTasks || 1)) * 100)}%) | Disetujui mentor minggu ini |
-| **Menunggu Review Mentor** | ${reviewTasks.length} | PR sudah ditautkan |
+| **Selesai (Done)** | ${doneTasks.length} (${Math.round((doneTasks.length / (totalTasks || 1)) * 100)}%) | Disetujui mentor |
+| **Menunggu Review Mentor** | ${reviewTasks.length} | PR siap diuji |
 | **Dalam Pengerjaan** | ${inProgressTasks.length} | Sedang dikerjakan tim |
 | **Terkendala (Blocked)** | ${blockedTasks.length} | Memerlukan intervensi mentor |
 | **Stale Tasks (>48 jam)** | ${staleTasks.length} | Potensi silent blocker pada junior |
@@ -74,7 +79,6 @@ tags:
   useCases.forEach((uc) => {
     // Show active tasks for this usecase
     const ucActiveTasks = activeTasks.filter((t) => t.useCaseId === uc.id);
-    // Historical all tasks for this usecase
     const ucAllTasks = tasks.filter((t) => t.useCaseId === uc.id);
     const ucDoneCount = ucAllTasks.filter((t) => t.status === 'DONE').length;
     const isUcComplete = ucAllTasks.length > 0 && ucDoneCount === ucAllTasks.length;
@@ -87,7 +91,7 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
 `;
 
     if (ucActiveTasks.length === 0) {
-      md += `*(Semua tugas aktif di Use Case ini sudah diarsipkan sebagai selesai pada sprint sebelumnya)*\n\n`;
+      md += `*(Semua tugas pada Use Case ini telah diarsipkan sebagai selesai)*\n\n`;
     } else {
       ucActiveTasks.forEach((task) => {
         const assignee = userMap.get(task.assigneeId);
@@ -112,7 +116,6 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
           md += `  - **Pull Request:** [PR #${task.prNumber || 'Link'}](${task.githubPrUrl})\n`;
         }
 
-        // Only show blocker note if currently BLOCKED
         if (task.status === 'BLOCKED' && task.blockerNote) {
           md += `  - 🚨 **Kendala/Blocker Aktif:** ${task.blockerNote}\n`;
         }
@@ -133,7 +136,7 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
 `;
 
   if (blockedTasks.length === 0) {
-    md += `*Tidak ada tugas yang ter-block minggu ini.* 🎉\n\n`;
+    md += `*Tidak ada tugas yang ter-block saat ini.* 🎉\n\n`;
   } else {
     blockedTasks.forEach((t) => {
       const assignee = userMap.get(t.assigneeId);
@@ -172,10 +175,10 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
 
 ## 🤖 Prompt untuk AI Assistant di Obsidian
 
-> [!TIP] Jalankan prompt di bawah ini bersama AI di Obsidian untuk menganalisis data minggu ini:
+> [!TIP] Jalankan prompt di bawah ini bersama AI di Obsidian untuk menganalisis data penarikan (${dateIso}):
 \`\`\`markdown
 Bertindaklah sebagai Senior Engineering Mentor & Project Advisor.
-Analisis data rekap sprint mingguan di atas (${currentWeek}):
+Analisis data rekapitulasi tim di atas (Penarikan: ${dateIso}):
 1. Berikan evaluasi objektif untuk masing-masing developer (Junior Fullstack, Anak SMK, dan UI/FE).
 2. Temukan akar masalah dari blocker dan tugas yang menggantung (stale tasks).
 3. Buatkan rencana bimbingan teknis (coaching topics) 1-on-1 untuk anak SMK dan junior agar mereka tidak mengulangi kesalahan AI diff pada file arsitektur.
@@ -184,13 +187,4 @@ Analisis data rekap sprint mingguan di atas (${currentWeek}):
 `;
 
   return md;
-}
-
-function getWeekNumberString(d: Date): string {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }

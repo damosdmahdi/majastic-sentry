@@ -79,10 +79,17 @@ export default function HomePage() {
     }
   }, []);
 
-  // Initial load
+  // Fetch initial data on mount
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Enforce Mentor-only access for Obsidian tab
+  useEffect(() => {
+    if (currentUser.role !== 'MENTOR' && currentTab === 'obsidian') {
+      setCurrentTab('board');
+    }
+  }, [currentUser, currentTab]);
 
   // Auto-polling interval every 20 seconds if window is visible
   useEffect(() => {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, Code2, Palette, ListTodo, UserCheck, Target } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Code2, Palette, ListTodo, UserCheck, Target, Search, Check, ChevronDown } from 'lucide-react';
 import { TaskType, HttpMethod, User, UseCase } from '@/types';
 
 interface AddTaskModalProps {
@@ -28,6 +28,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onAddTask,
 }) => {
   const [selectedUseCaseId, setSelectedUseCaseId] = useState(initialUseCaseId || useCases[0]?.id || '');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
   const [title, setTitle] = useState('');
   const [type, setType] = useState<TaskType>('ENDPOINT');
   const [method, setMethod] = useState<HttpMethod>('POST');
@@ -41,6 +44,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       setSelectedUseCaseId(useCases[0].id);
     }
   }, [initialUseCaseId, useCases, selectedUseCaseId]);
+
+  // Filter Use Cases based on search query (code or title)
+  const filteredUseCases = useMemo(() => {
+    if (!searchQuery.trim()) return useCases;
+    const query = searchQuery.toLowerCase();
+    return useCases.filter(
+      (uc) =>
+        uc.code.toLowerCase().includes(query) ||
+        uc.title.toLowerCase().includes(query) ||
+        uc.businessGoal.toLowerCase().includes(query)
+    );
+  }, [useCases, searchQuery]);
+
+  const selectedUseCase = useCases.find((u) => u.id === selectedUseCaseId);
 
   if (!isOpen) return null;
 
@@ -59,6 +76,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setTitle('');
     setType('ENDPOINT');
     setRoute('/api/v1/');
+    setSearchQuery('');
+    setIsPickerOpen(false);
     onClose();
   };
 
@@ -88,24 +107,91 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           
-          {/* Target Use Case Selector */}
+          {/* Searchable Use Case Combobox */}
           <div>
-            <label className="font-semibold text-slate-700 flex items-center gap-1.5 mb-1.5">
-              <Target className="w-3.5 h-3.5 text-slate-500" />
-              <span>Bagian dari Use Case / Fitur:</span>
+            <label className="font-semibold text-slate-700 flex items-center justify-between mb-1.5">
+              <span className="flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-slate-500" />
+                <span>Pilih Use Case / Modul Fitur:</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal">
+                {useCases.length} use case tersedia
+              </span>
             </label>
-            <select
-              aria-label="Pilih Use Case"
-              value={selectedUseCaseId}
-              onChange={(e) => setSelectedUseCaseId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-xs bg-white font-medium text-slate-800"
+
+            {/* Selected Use Case Trigger Card */}
+            <div
+              onClick={() => setIsPickerOpen(!isPickerOpen)}
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition-colors"
             >
-              {useCases.map((uc) => (
-                <option key={uc.id} value={uc.id}>
-                  [{uc.code}] {uc.title}
-                </option>
-              ))}
-            </select>
+              {selectedUseCase ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded">
+                    {selectedUseCase.code}
+                  </span>
+                  <span className="font-medium text-slate-800 text-xs truncate max-w-[280px]">
+                    {selectedUseCase.title}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-slate-400">Pilih salah satu Use Case...</span>
+              )}
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isPickerOpen ? 'rotate-180' : ''}`} />
+            </div>
+
+            {/* Search Dropdown / Picker Box */}
+            {isPickerOpen && (
+              <div className="mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg p-2 space-y-2 animate-in fade-in duration-150">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Ketik kode (misal UC-01) atau judul fitur..."
+                    className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Filtered List */}
+                <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                  {filteredUseCases.length === 0 ? (
+                    <div className="p-3 text-center text-slate-400 text-[11px]">
+                      Tidak ada Use Case yang cocok dengan pencarian
+                    </div>
+                  ) : (
+                    filteredUseCases.map((uc) => {
+                      const isSelected = uc.id === selectedUseCaseId;
+                      return (
+                        <div
+                          key={uc.id}
+                          onClick={() => {
+                            setSelectedUseCaseId(uc.id);
+                            setIsPickerOpen(false);
+                            setSearchQuery('');
+                          }}
+                          className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'bg-sky-50 text-sky-900 font-semibold'
+                              : 'hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
+                              {uc.code}
+                            </span>
+                            <span className="text-xs truncate max-w-[280px]">{uc.title}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-sky-600 shrink-0" />}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Type Selector (Endpoint vs Slicing vs General) */}

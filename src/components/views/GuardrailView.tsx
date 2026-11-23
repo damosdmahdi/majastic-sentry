@@ -11,7 +11,9 @@ import {
   Trash2, 
   Key, 
   Loader2,
-  Info
+  CheckCircle2,
+  Activity,
+  Lock
 } from 'lucide-react';
 
 interface GuardrailViewProps {
@@ -30,6 +32,37 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
 
   const [files, setFiles] = useState<string[]>(project.protectedFiles || []);
   const [newFile, setNewFile] = useState('');
+
+  // GitHub Connectivity Test State
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<{
+    success: boolean;
+    isSimulated?: boolean;
+    isPrivate?: boolean;
+    message?: string;
+    error?: string;
+  } | null>(null);
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true);
+    setConnectionResult(null);
+    try {
+      const res = await fetch('/api/github/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo: project.githubRepo }),
+      });
+      const data = await res.json();
+      setConnectionResult(data);
+    } catch (err: any) {
+      setConnectionResult({
+        success: false,
+        error: `Gagal memanggil API diagnostik: ${err.message}`,
+      });
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   const handleRunCheck = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,10 +131,88 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
       
       {/* Intro Header */}
       <div className="pb-4 border-b border-slate-200">
-        <h2 className="text-lg font-bold text-slate-900 tracking-tight">Guardrail & Deteksi AI-Diff</h2>
+        <h2 className="text-lg font-bold text-slate-900 tracking-tight">Guardrail & Diagnostik GitHub</h2>
         <p className="text-xs text-slate-500 mt-1">
           Mencegah siswa SMK atau junior merusak konfigurasi arsitektur karena secara tidak sengaja menerima perubahan kode otomatis dari AI.
         </p>
+      </div>
+
+      {/* GitHub Private Repo Connectivity Card */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-sky-600" />
+              <h3 className="font-bold text-sm text-slate-900">Konektivitas Repositori Private GitHub</h3>
+              <span className="text-[10px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                {project.githubRepo}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Memeriksa apakah token PAT memiliki izin akses membaca PR di organisasi private Majastic.
+            </p>
+          </div>
+
+          <button
+            onClick={handleTestConnection}
+            disabled={isTestingConnection}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-500 text-white text-xs font-semibold rounded-xl transition-all shadow-sm shrink-0"
+          >
+            {isTestingConnection ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Menguji Akses...</span>
+              </>
+            ) : (
+              <>
+                <Activity className="w-3.5 h-3.5 text-sky-400" />
+                <span>Uji Koneksi GitHub</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Live Diagnostics Result Box */}
+        {connectionResult && (
+          <div
+            className={`rounded-xl p-4 text-xs space-y-1.5 transition-all border ${
+              connectionResult.success
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                : connectionResult.isSimulated
+                ? 'bg-amber-50 border-amber-200 text-amber-950'
+                : 'bg-rose-50 border-rose-200 text-rose-950'
+            }`}
+          >
+            <div className="flex items-center gap-2 font-bold">
+              {connectionResult.success ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Koneksi Live Berhasil (Private Repo Terbaca)</span>
+                </>
+              ) : connectionResult.isSimulated ? (
+                <>
+                  <ShieldAlert className="w-4 h-4 text-amber-600" />
+                  <span>Mode Simulasi Aktif</span>
+                </>
+              ) : (
+                <>
+                  <AlertOctagon className="w-4 h-4 text-rose-600" />
+                  <span>Koneksi Gagal</span>
+                </>
+              )}
+            </div>
+
+            <p className="leading-relaxed">
+              {connectionResult.message || connectionResult.error}
+            </p>
+
+            {!connectionResult.success && (
+              <div className="pt-2 text-[11px] text-slate-600">
+                <strong>Cara setting:</strong> Tambahkan <code className="bg-white/80 px-1 py-0.5 rounded font-mono text-slate-800">GITHUB_PAT=ghp_...</code> di file <code className="bg-white/80 px-1 py-0.5 rounded font-mono text-slate-800">.env.local</code> atau dashboard Vercel dengan scope <strong>repo</strong>.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* PR Check Box */}
@@ -238,17 +349,6 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Token Notice */}
-      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-xs text-slate-600 space-y-2">
-        <div className="flex items-center gap-2 font-bold text-slate-800">
-          <Key className="w-4 h-4 text-slate-600" />
-          <span>Koneksi GitHub Private Organization Majastic:</span>
-        </div>
-        <p className="leading-relaxed">
-          Untuk memeriksa repositori private secara langsung tanpa batasan, pastikan kamu menambahkan <code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">GITHUB_PAT</code> di file <code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-slate-800">.env.local</code> atau di Vercel Dashboard.
-        </p>
       </div>
 
     </div>

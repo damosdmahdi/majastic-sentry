@@ -24,14 +24,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ markdown: markdownContent });
   }
 
-  // Format filename e.g. majastic-review-2026-W47.md
+  // Format filename e.g. majastic-review-2026-11-24.md
   const now = new Date();
-  const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  const filename = `majastic-review-${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}.md`;
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const filename = `majastic-review-${year}-${month}-${day}.md`;
 
   return new NextResponse(markdownContent, {
     status: 200,

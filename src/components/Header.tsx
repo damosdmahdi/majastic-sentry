@@ -104,17 +104,21 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Guardrail PR</span>
             </button>
 
-            <button
-              onClick={() => onTabChange('obsidian')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentTab === 'obsidian'
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'text-purple-700 hover:text-purple-900 hover:bg-purple-50'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Tarik ke Obsidian</span>
-            </button>
+            {/* Obsidian Tab: RESTRICTED TO MENTOR ONLY */}
+            {currentUser.role === 'MENTOR' && (
+              <button
+                onClick={() => onTabChange('obsidian')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  currentTab === 'obsidian'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-purple-700 hover:text-purple-900 hover:bg-purple-50'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Tarik ke Obsidian</span>
+                <span className="text-[9px] bg-purple-700/50 text-purple-200 px-1 rounded font-mono">Lead</span>
+              </button>
+            )}
           </nav>
 
           {/* User Role Selector */}
