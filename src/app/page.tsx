@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Project, 
   Milestone, 
@@ -29,8 +30,12 @@ import { AddTaskModal } from '@/components/Modals/AddTaskModal';
 import { CheckPrModal } from '@/components/Modals/CheckPrModal';
 import { BlockerModal } from '@/components/Modals/BlockerModal';
 import { generateObsidianWeeklyMarkdown } from '@/lib/obsidian-exporter';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
+  const router = useRouter();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
   const [currentTab, setCurrentTab] = useState<NavTab>('board');
 
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
@@ -38,11 +43,33 @@ export default function HomePage() {
   const [useCases, setUseCases] = useState<UseCase[]>(INITIAL_USE_CASES);
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]); // Default to Mentor
+  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]);
 
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
+
+  // Check user authentication session on mount
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setCurrentUser(data.user);
+            setIsAuthChecking(false);
+            return;
+          }
+        }
+        // If not authenticated, redirect to login
+        router.push('/login');
+      } catch {
+        router.push('/login');
+      }
+    }
+    checkAuth();
+  }, [router]);
 
   // Modals state
   const [isAddUseCaseModalOpen, setIsAddUseCaseModalOpen] = useState(false);
@@ -235,6 +262,22 @@ export default function HomePage() {
     tasks,
     users,
   });
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm animate-pulse">
+            M
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
+            <span>Memverifikasi sesi tim...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-slate-900 selection:text-white">

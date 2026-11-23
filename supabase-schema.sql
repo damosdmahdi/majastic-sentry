@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    password TEXT DEFAULT 'majastic123',
     role TEXT NOT NULL CHECK (role IN ('MENTOR', 'FULLSTACK', 'UI_FE', 'BUSINESS')),
     avatar TEXT DEFAULT '👤',
     tag TEXT,

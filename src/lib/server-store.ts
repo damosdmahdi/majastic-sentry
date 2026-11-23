@@ -59,6 +59,7 @@ export const db = {
               role: u.role,
               avatar: u.avatar,
               tag: u.tag,
+              password: u.password,
             })),
             projects: (projRes.data || []).map((p: any) => ({
               id: p.id,

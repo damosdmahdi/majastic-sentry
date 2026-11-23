@@ -7,6 +7,7 @@ export interface User {
   role: Role;
   avatar: string;
   tag?: string; // e.g. "Lead", "Fullstack Pemula", "SMK Intern", "UI Designer"
+  password?: string;
 }
 
 export interface Project {
