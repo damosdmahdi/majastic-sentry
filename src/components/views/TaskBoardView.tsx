@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Task, UseCase, User, TaskStatus, HttpMethod } from '@/types';
+import { Task, UseCase, User, TaskStatus } from '@/types';
 import { 
   Plus, 
-  User as UserIcon, 
   Clock, 
   AlertOctagon, 
-  CheckCircle2, 
   GitPullRequest, 
   Palette, 
-  Code2,
-  Filter,
-  Check
+  Check, 
+  ShieldCheck, 
+  ShieldAlert, 
+  Archive,
+  ExternalLink
 } from 'lucide-react';
 
 interface TaskBoardViewProps {
@@ -23,6 +23,8 @@ interface TaskBoardViewProps {
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus, blockerNote?: string) => void;
   onOpenAddTaskModal: () => void;
   onOpenBlockerModal: (task: Task) => void;
+  onOpenCheckPrModal: (task: Task) => void;
+  onArchiveCompletedTasks: () => void;
 }
 
 export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
@@ -33,9 +35,12 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   onUpdateTaskStatus,
   onOpenAddTaskModal,
   onOpenBlockerModal,
+  onOpenCheckPrModal,
+  onArchiveCompletedTasks,
 }) => {
   const [onlyMyTasks, setOnlyMyTasks] = useState(false);
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('ALL');
+  const [isConfirmArchiveOpen, setIsConfirmArchiveOpen] = useState(false);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
   const useCaseMap = new Map(useCases.map((uc) => [uc.id, uc]));
@@ -47,6 +52,8 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     if (selectedUserFilter !== 'ALL' && t.assigneeId !== selectedUserFilter) return false;
     return true;
   });
+
+  const doneCount = displayedTasks.filter((t) => t.status === 'DONE').length;
 
   const columns: { id: TaskStatus; title: string; count: number; color: string }[] = [
     {
@@ -70,7 +77,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     {
       id: 'DONE',
       title: 'Selesai',
-      count: displayedTasks.filter((t) => t.status === 'DONE').length,
+      count: doneCount,
       color: 'bg-emerald-100 text-emerald-800',
     },
   ];
@@ -79,10 +86,10 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
       {/* Top Filter & Calm Action Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
         
-        {/* Left: Focus Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Left: Focus Toggle & Team Filter */}
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setOnlyMyTasks(!onlyMyTasks)}
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
@@ -113,14 +120,27 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
           </div>
         </div>
 
-        {/* Right: Add Task Button */}
-        <button
-          onClick={onOpenAddTaskModal}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Tugas Baru</span>
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          {doneCount > 0 && (
+            <button
+              onClick={() => setIsConfirmArchiveOpen(true)}
+              title="Arsipkan tugas selesai setelah diekspor ke Obsidian"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition-all"
+            >
+              <Archive className="w-3.5 h-3.5 text-slate-500" />
+              <span>Arsipkan Selesai ({doneCount})</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenAddTaskModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Tugas</span>
+          </button>
+        </div>
 
       </div>
 
@@ -129,7 +149,6 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
         {columns.map((col) => {
           const colTasks = displayedTasks.filter((t) => {
             if (col.id === 'IN_PROGRESS') {
-              // Both IN_PROGRESS and BLOCKED live in this column for easy handling
               return t.status === 'IN_PROGRESS' || t.status === 'BLOCKED';
             }
             return t.status === col.id;
@@ -219,13 +238,65 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                           </div>
                         )}
 
+                        {/* Pull Request & Guardrail Trigger (Connected Directly on the Card!) */}
+                        <div className="pt-1 pb-2 border-t border-slate-100 my-1 flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                          {task.githubPrUrl ? (
+                            <div className="flex items-center gap-1.5">
+                              <a
+                                href={task.githubPrUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 font-mono text-[10px] text-slate-600 hover:text-sky-600 bg-slate-100 px-1.5 py-0.5 rounded"
+                              >
+                                <GitPullRequest className="w-3 h-3 text-purple-600" />
+                                <span>PR #{task.prNumber || 'Lihat'}</span>
+                                <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                              </a>
+
+                              {task.integrityCheck?.status === 'WARNING' && (
+                                <button
+                                  onClick={() => onOpenCheckPrModal(task)}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded hover:bg-rose-100"
+                                >
+                                  <ShieldAlert className="w-3 h-3 text-rose-600" />
+                                  <span>AI-Diff Alert</span>
+                                </button>
+                              )}
+
+                              {task.integrityCheck?.status === 'PASSED' && (
+                                <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                  <span>Guardrail OK</span>
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => onOpenCheckPrModal(task)}
+                              className="text-[11px] text-purple-700 hover:text-purple-800 font-medium inline-flex items-center gap-1"
+                            >
+                              <GitPullRequest className="w-3 h-3 text-purple-600" />
+                              <span>+ Tautkan PR GitHub</span>
+                            </button>
+                          )}
+
+                          {task.githubPrUrl && (
+                            <button
+                              onClick={() => onOpenCheckPrModal(task)}
+                              className="text-[10px] text-slate-400 hover:text-slate-600 underline"
+                            >
+                              Uji Ulang
+                            </button>
+                          )}
+                        </div>
+
                         {/* Card Footer: Assignee & Move Status */}
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                        <div className="flex items-center justify-between pt-1 text-xs">
                           
                           {/* Assignee */}
                           <div className="flex items-center gap-1.5 text-slate-600">
                             <span className="text-sm">{assignee?.avatar || '👤'}</span>
-                            <span className="text-[11px] font-medium truncate max-w-[100px]">
+                            <span className="text-[11px] font-medium truncate max-w-[90px]">
                               {assignee?.name.split(' ')[0] || 'Unassigned'}
                             </span>
                           </div>
@@ -263,6 +334,40 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
           );
         })}
       </div>
+
+      {/* Confirmation Modal: Archive Done Tasks */}
+      {isConfirmArchiveOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center">
+              <Archive className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Arsipkan Tugas yang Selesai?</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Tindakan ini akan membersihkan kolom <strong>Done ({doneCount} tugas)</strong> dari papan agar siap memulai sprint baru. Data tetap tersimpan aman di database dan catatan Obsidian kamu.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setIsConfirmArchiveOpen(false)}
+                className="px-3.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  onArchiveCompletedTasks();
+                  setIsConfirmArchiveOpen(false);
+                }}
+                className="px-3.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm"
+              >
+                Ya, Arsipkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

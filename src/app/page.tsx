@@ -9,7 +9,8 @@ import {
   User, 
   TaskStatus, 
   TaskType, 
-  HttpMethod 
+  HttpMethod,
+  IntegrityCheckResult
 } from '@/types';
 import {
   INITIAL_PROJECTS,
@@ -25,6 +26,7 @@ import { GuardrailView } from '@/components/views/GuardrailView';
 import { ObsidianView } from '@/components/views/ObsidianView';
 import { AddUseCaseModal } from '@/components/Modals/AddUseCaseModal';
 import { AddTaskModal } from '@/components/Modals/AddTaskModal';
+import { CheckPrModal } from '@/components/Modals/CheckPrModal';
 import { BlockerModal } from '@/components/Modals/BlockerModal';
 import { generateObsidianWeeklyMarkdown } from '@/lib/obsidian-exporter';
 
@@ -42,11 +44,15 @@ export default function HomePage() {
   const [isAddUseCaseModalOpen, setIsAddUseCaseModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [selectedUseCaseIdForTask, setSelectedUseCaseIdForTask] = useState<string>('');
+  
+  const [isCheckPrModalOpen, setIsCheckPrModalOpen] = useState(false);
+  const [selectedTaskForPr, setSelectedTaskForPr] = useState<Task | null>(null);
+
   const [isBlockerModalOpen, setIsBlockerModalOpen] = useState(false);
   const [selectedTaskForBlocker, setSelectedTaskForBlocker] = useState<Task | null>(null);
 
-  const activeProject = projects[0];
-  const activeMilestone = milestones[0];
+  const activeProject = projects[0] || INITIAL_PROJECTS[0];
+  const activeMilestone = milestones[0] || INITIAL_MILESTONES[0];
 
   // Fetch initial data from server API on mount
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function HomePage() {
           if (data.projects?.length) setProjects(data.projects);
           if (data.milestones?.length) setMilestones(data.milestones);
           if (data.useCases?.length) setUseCases(data.useCases);
-          if (data.tasks?.length) setTasks(data.tasks);
+          if (data.tasks) setTasks(data.tasks);
           if (data.users?.length) setUsers(data.users);
         }
       } catch (err) {
@@ -142,10 +148,48 @@ export default function HomePage() {
     }
   };
 
+  // Archive Completed Tasks (Sprint Cutoff)
+  const handleArchiveCompletedTasks = async () => {
+    // Optimistic UI update: remove all DONE tasks from board
+    setTasks((prev) => prev.filter((t) => t.status !== 'DONE'));
+
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ARCHIVE_COMPLETED' }),
+      });
+    } catch (err) {
+      console.error('Failed to archive completed tasks on backend:', err);
+    }
+  };
+
   // Update Protected Files
   const handleUpdateProtectedFiles = (files: string[]) => {
     setProjects((prev) =>
       prev.map((p) => (p.id === activeProject.id ? { ...p, protectedFiles: files } : p))
+    );
+  };
+
+  // PR Checked Callback
+  const handlePrChecked = (
+    taskId: string,
+    prUrl: string,
+    prNumber: number,
+    result: IntegrityCheckResult
+  ) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              githubPrUrl: prUrl,
+              prNumber,
+              integrityCheck: result,
+              lastUpdatedAt: new Date().toISOString(),
+            }
+          : t
+      )
     );
   };
 
@@ -188,6 +232,11 @@ export default function HomePage() {
               setSelectedTaskForBlocker(task);
               setIsBlockerModalOpen(true);
             }}
+            onOpenCheckPrModal={(task) => {
+              setSelectedTaskForPr(task);
+              setIsCheckPrModalOpen(true);
+            }}
+            onArchiveCompletedTasks={handleArchiveCompletedTasks}
           />
         )}
 
@@ -234,9 +283,20 @@ export default function HomePage() {
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
-        useCaseId={selectedUseCaseIdForTask || useCases[0]?.id || ''}
+        useCases={useCases}
+        initialUseCaseId={selectedUseCaseIdForTask || useCases[0]?.id || ''}
         users={users}
         onAddTask={handleAddTask}
+      />
+
+      <CheckPrModal
+        isOpen={isCheckPrModalOpen}
+        onClose={() => {
+          setIsCheckPrModalOpen(false);
+          setSelectedTaskForPr(null);
+        }}
+        task={selectedTaskForPr}
+        onPrChecked={handlePrChecked}
       />
 
       <BlockerModal

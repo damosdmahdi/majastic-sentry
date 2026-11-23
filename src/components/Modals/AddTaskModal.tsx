@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Code2, Palette, ListTodo, UserCheck } from 'lucide-react';
-import { TaskType, HttpMethod, User } from '@/types';
+import React, { useState, useEffect } from 'react';
+import { X, Code2, Palette, ListTodo, UserCheck, Target } from 'lucide-react';
+import { TaskType, HttpMethod, User, UseCase } from '@/types';
 
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  useCaseId: string;
+  useCases: UseCase[];
+  initialUseCaseId?: string;
   users: User[];
   onAddTask: (taskData: {
     useCaseId: string;
@@ -21,24 +22,34 @@ interface AddTaskModalProps {
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   isOpen,
   onClose,
-  useCaseId,
+  useCases,
+  initialUseCaseId,
   users,
   onAddTask,
 }) => {
+  const [selectedUseCaseId, setSelectedUseCaseId] = useState(initialUseCaseId || useCases[0]?.id || '');
   const [title, setTitle] = useState('');
   const [type, setType] = useState<TaskType>('ENDPOINT');
   const [method, setMethod] = useState<HttpMethod>('POST');
   const [route, setRoute] = useState('/api/v1/');
   const [assigneeId, setAssigneeId] = useState(users[1]?.id || users[0]?.id || '');
 
+  useEffect(() => {
+    if (initialUseCaseId) {
+      setSelectedUseCaseId(initialUseCaseId);
+    } else if (useCases.length > 0 && !selectedUseCaseId) {
+      setSelectedUseCaseId(useCases[0].id);
+    }
+  }, [initialUseCaseId, useCases, selectedUseCaseId]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !assigneeId) return;
+    if (!title.trim() || !assigneeId || !selectedUseCaseId) return;
 
     onAddTask({
-      useCaseId,
+      useCaseId: selectedUseCaseId,
       title: title.trim(),
       type,
       endpointSpec: type === 'ENDPOINT' ? { method, route: route.trim() } : undefined,
@@ -62,8 +73,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <ListTodo className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-900 text-sm">Tambah Tugas Teknis</h2>
-              <p className="text-xs text-slate-500">Tentukan spesifikasi endpoint atau halaman slicing</p>
+              <h2 className="font-bold text-slate-900 text-sm">Tambah Tugas Baru</h2>
+              <p className="text-xs text-slate-500">Tentukan Use Case, spesifikasi endpoint atau halaman slicing</p>
             </div>
           </div>
           <button
@@ -77,7 +88,27 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           
-          {/* Type Selector (Tiga Pilar: Endpoint vs Slicing vs General) */}
+          {/* Target Use Case Selector */}
+          <div>
+            <label className="font-semibold text-slate-700 flex items-center gap-1.5 mb-1.5">
+              <Target className="w-3.5 h-3.5 text-slate-500" />
+              <span>Bagian dari Use Case / Fitur:</span>
+            </label>
+            <select
+              aria-label="Pilih Use Case"
+              value={selectedUseCaseId}
+              onChange={(e) => setSelectedUseCaseId(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-xs bg-white font-medium text-slate-800"
+            >
+              {useCases.map((uc) => (
+                <option key={uc.id} value={uc.id}>
+                  [{uc.code}] {uc.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Type Selector (Endpoint vs Slicing vs General) */}
           <div>
             <label className="font-semibold text-slate-700 block mb-1.5">Tipe Tugas:</label>
             <div className="grid grid-cols-3 gap-2">
@@ -181,7 +212,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <span>Tugaskan Kepada (Assignee):</span>
             </label>
             <select
-              aria-label="Tugaskan Kepada (Assignee)"
+              aria-label="Tugaskan Kepada"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-xs bg-white font-medium"
@@ -205,7 +236,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors shadow-sm"
             >
               Tambahkan Tugas
             </button>

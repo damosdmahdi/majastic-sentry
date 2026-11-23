@@ -28,7 +28,7 @@ export interface Milestone {
   sdlcType: SdlcType;
   startDate: string;
   endDate: string;
-  status: 'ACTIVE' | 'COMPLETED';
+  status: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
 }
 
 export interface UseCase {
@@ -67,6 +67,7 @@ export interface Task {
   githubPrUrl?: string;
   prNumber?: number;
   integrityCheck?: IntegrityCheckResult;
+  isArchived?: boolean;
   lastUpdatedAt: string; // ISO string
   reviewedAt?: string;
   createdAt: string;
