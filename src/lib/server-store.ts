@@ -152,7 +152,27 @@ export const db = {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        // Auto-ensure parent milestone exists to prevent FK constraint error
+        // 1. Auto-ensure project exists
+        await supabase.from('projects').upsert({
+          id: 'proj-1',
+          name: 'Majastic E-PKL (Laravel 11 + Inertia.js + Vue 3)',
+          slug: 'majastic-e-pkl',
+          description: 'Sistem Informasi Manajemen Praktik Kerja Lapangan (PKL) SMK berbasis Laravel 11, Inertia.js, dan Vue 3',
+          github_repo: 'TefaMajastic/epkl-core',
+          protected_files: [
+            'app/Http/Middleware/HandleInertiaRequests.php',
+            'vite.config.js',
+            'vite.config.ts',
+            'composer.json',
+            'package.json',
+            'docker-compose.yml',
+            'compose.yaml',
+            '.env.example',
+            'bootstrap/app.php'
+          ],
+        }, { onConflict: 'id' });
+
+        // 2. Auto-ensure parent milestone exists
         const matchingMs = INITIAL_MILESTONES.find((m) => m.id === useCase.milestoneId);
         if (matchingMs) {
           await supabase.from('milestones').upsert({
@@ -197,7 +217,27 @@ export const db = {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        // Auto-ensure parent milestone & use case exist in Supabase so Foreign Key NEVER fails!
+        // 1. Auto-ensure project exists in Supabase
+        await supabase.from('projects').upsert({
+          id: 'proj-1',
+          name: 'Majastic E-PKL (Laravel 11 + Inertia.js + Vue 3)',
+          slug: 'majastic-e-pkl',
+          description: 'Sistem Informasi Manajemen Praktik Kerja Lapangan (PKL) SMK berbasis Laravel 11, Inertia.js, dan Vue 3',
+          github_repo: 'TefaMajastic/epkl-core',
+          protected_files: [
+            'app/Http/Middleware/HandleInertiaRequests.php',
+            'vite.config.js',
+            'vite.config.ts',
+            'composer.json',
+            'package.json',
+            'docker-compose.yml',
+            'compose.yaml',
+            '.env.example',
+            'bootstrap/app.php'
+          ],
+        }, { onConflict: 'id' });
+
+        // 2. Auto-ensure parent milestone & use case exist in Supabase so Foreign Key NEVER fails!
         const matchingUc = INITIAL_USE_CASES.find((u) => u.id === task.useCaseId);
         if (matchingUc) {
           const matchingMs = INITIAL_MILESTONES.find((m) => m.id === matchingUc.milestoneId);

@@ -199,11 +199,16 @@ export default function HomePage() {
         body: JSON.stringify(taskData),
       });
       const data = await res.json();
-      if (data.success && data.task) {
+      if (!res.ok || !data.success) {
+        alert(`Gagal menyimpan tugas: ${data.error || 'Terjadi kesalahan pada server'}`);
+        return;
+      }
+      if (data.task) {
         setTasks((prev) => [...prev, data.task]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add task:', err);
+      alert(`Terjadi kesalahan jaringan: ${err.message}`);
     }
   };
 
