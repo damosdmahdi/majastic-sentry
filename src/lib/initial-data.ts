@@ -90,10 +90,73 @@ export const INITIAL_MILESTONES: Milestone[] = [
     endDate: '2026-11-23T00:00:00.000Z',
     status: 'COMPLETED',
   },
+  {
+    id: 'ms-sprint-3',
+    projectId: 'proj-1',
+    title: 'Sprint 3 - Monitoring Visit, Penilaian & Sertifikat',
+    sdlcType: 'AGILE_SPRINT',
+    startDate: '2026-12-09T00:00:00.000Z',
+    endDate: '2026-12-23T00:00:00.000Z',
+    status: 'ACTIVE',
+  },
 ];
 
 export const INITIAL_USE_CASES: UseCase[] = [
-  // --- Modul 02: Portal & Profil Siswa ---
+  // ==========================================
+  // MODUL 01: PRA-PKL (SELESAI)
+  // ==========================================
+  {
+    id: 'uc-pra-01',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-01',
+    title: 'Unggah Berkas Pendaftaran Awal (Fase 1)',
+    businessGoal: 'Siswa mengunggah 2 berkas wajib: Surat Ketarunaan dan Nilai Rapor via Dropzone (PDF/JPG/PNG max 2MB) ke Cloud Storage S3',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+  {
+    id: 'uc-pra-02',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-02',
+    title: 'Review Berkas Awal Siswa oleh Kaprodi / Guru (Fase 2)',
+    businessGoal: 'Guru/Kaprodi menelaah berkas siswa pada antrean. Approved memajukan step_aktif=3, Rejected mengembalikan ke step 1 dengan catatan revisi',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+  {
+    id: 'uc-pra-03',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-03',
+    title: 'Pemilihan Perusahaan Mitra & Cetak Surat Pengantar (Fase 3)',
+    businessGoal: 'Siswa memilih 1 mitra industri dari katalog DUDI aktif berdasarkan sisa kuota, dan mencetak surat pengantar resmi fisik',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+  {
+    id: 'uc-pra-04',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-04',
+    title: 'Unggah Berkas Lanjutan Pasca-Review DUDI (Fase 4)',
+    businessGoal: 'Siswa mengunggah 2 berkas penentu: Surat Balasan Diterima PT (ACC PT) dan Surat Izin Orang Tua/Wali ke storage S3',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+  {
+    id: 'uc-pra-05',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-05',
+    title: 'Review Berkas Lanjutan & Pengesahan Kesiapan PKL',
+    businessGoal: 'Kaprodi memverifikasi keabsahan surat balasan industri dan surat izin orang tua untuk mengesahkan kelayakan siswa berangkat PKL',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+  {
+    id: 'uc-pra-06',
+    milestoneId: 'ms-sprint-1',
+    code: 'UC-PRA-06',
+    title: 'Pembentukan Entitas PKL Aktif (Siap PKL)',
+    businessGoal: 'Sistem secara otomatis mengunci step_aktif=5, menghubungkan relasi siswa-perusahaan-mentor DUDI, dan membuka akses modul PKL aktif',
+    createdAt: '2026-11-10T08:00:00.000Z',
+  },
+
+  // ==========================================
+  // MODUL 02: PORTAL & PROFIL SISWA
+  // ==========================================
   {
     id: 'uc-dsh-01',
     milestoneId: 'ms-sprint-2',
@@ -119,7 +182,9 @@ export const INITIAL_USE_CASES: UseCase[] = [
     createdAt: '2026-11-24T08:00:00.000Z',
   },
 
-  // --- Modul 03: Presensi & Kehadiran ---
+  // ==========================================
+  // MODUL 03: PRESENSI & KEHADIRAN
+  // ==========================================
   {
     id: 'uc-abs-01',
     milestoneId: 'ms-sprint-2',
@@ -161,7 +226,9 @@ export const INITIAL_USE_CASES: UseCase[] = [
     createdAt: '2026-11-24T08:00:00.000Z',
   },
 
-  // --- Modul 04: Jurnal Kegiatan Harian ---
+  // ==========================================
+  // MODUL 04: JURNAL KEGIATAN HARIAN
+  // ==========================================
   {
     id: 'uc-jrn-01',
     milestoneId: 'ms-sprint-2',
@@ -194,8 +261,18 @@ export const INITIAL_USE_CASES: UseCase[] = [
     businessGoal: 'Guru pembimbing sekolah memantau keteraturan pengisian jurnal siswa bimbingan per minggu, watermark Telah Diedit, dan kelengkapan paraf DUDI',
     createdAt: '2026-11-24T08:00:00.000Z',
   },
+  {
+    id: 'uc-jrn-05',
+    milestoneId: 'ms-sprint-2',
+    code: 'UC-JRN-05',
+    title: 'Cetak Dokumen Rekapitulasi Jurnal (Print View / Export PDF)',
+    businessGoal: 'Mencetak dokumen rekapitulasi buku jurnal resmi sekolah untuk lampiran laporan fisik, hari tanpa entri tercetak baris kosong sesuai sanksi kedisiplinan',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
 
-  // --- Modul 05: Bimbingan Laporan ---
+  // ==========================================
+  // MODUL 05: BIMBINGAN LAPORAN
+  // ==========================================
   {
     id: 'uc-bmb-01',
     milestoneId: 'ms-sprint-2',
@@ -213,7 +290,97 @@ export const INITIAL_USE_CASES: UseCase[] = [
     createdAt: '2026-11-24T08:00:00.000Z',
   },
 
-  // --- Modul 08: Informasi Jadwal ---
+  // ==========================================
+  // MODUL 06: MONITORING VISIT GURU
+  // ==========================================
+  {
+    id: 'uc-vst-01',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-VST-01',
+    title: 'Input Laporan Kunjungan Fisik (Visit Offline) oleh Guru',
+    businessGoal: 'Guru mendokumentasikan evaluasi monitoring tatap muka di industri dengan tanggal server now() terkunci, tanda tangan digital guru, tanpa fitur hapus',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-vst-02',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-VST-02',
+    title: 'Pemantauan Riwayat Catatan Kunjungan Guru oleh DUDI (Read-Only)',
+    businessGoal: 'Pembimbing industri memantau hasil catatan evaluasi dan saran kunjungan guru sekolah secara transparan dan read-only di portal DUDI',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+
+  // ==========================================
+  // MODUL 07: PENILAIAN & KELULUSAN AKHIR
+  // ==========================================
+  {
+    id: 'uc-nil-01',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-01',
+    title: 'Sinkronisasi Capaian Pembelajaran (CP) Teknis',
+    businessGoal: 'Menyelaraskan indikator capaian kurikulum kejuruan dengan pekerjaan aktual industri sebagai acuan butir penilaian keterampilan',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-02',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-02',
+    title: 'Input Nilai Sikap / Soft Skills oleh Pembimbing DUDI',
+    businessGoal: 'Pembimbing DUDI memberikan skor evaluasi aspek sikap (kejujuran, disiplin, kerja sama) skala 0-100 dan catatan kepribadian siswa',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-03',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-03',
+    title: 'Input Nilai Keterampilan Teknis di Industri',
+    businessGoal: 'Pembimbing DUDI & guru menilai kompetensi kejuruan siswa berdasarkan butir capaian pembelajaran yang telah disinkronisasi',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-04',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-04',
+    title: 'Unggah Dokumen Naskah Laporan PKL oleh Siswa',
+    businessGoal: 'Siswa mengunggah berkas PDF draf naskah laporan PKL lengkap (max 10MB) ke S3 untuk ditelaah guru, tombol cetak terkunci',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-05',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-05',
+    title: 'Telaah & Persetujuan Naskah Laporan oleh Guru (Unlock Cetak)',
+    businessGoal: 'Guru menelaah naskah laporan. Status approved membuka akses unduh & cetak resmi bagi siswa serta membuka form input nilai guru',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-06',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-06',
+    title: 'Input Nilai Naskah Laporan PKL oleh Guru',
+    businessGoal: 'Guru menginput nilai naskah laporan bersyarat approved, sistem mengkalkulasi akumulasi nilai akhir total otomatis dengan bobot kurikulum',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-07',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-07',
+    title: 'Yudisium & Pengesahan Kelulusan Akhir oleh Kaprodi',
+    businessGoal: 'Kaprodi mengevaluasi nilai akhir siswa terhadap KKM, menetapkan status remedial jika tidak tuntas, atau mengesahkan kelulusan resmi',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+  {
+    id: 'uc-nil-08',
+    milestoneId: 'ms-sprint-3',
+    code: 'UC-NIL-08',
+    title: 'Penerbitan Sertifikat PKL Otomatis (QR Code)',
+    businessGoal: 'Sistem otomatis mengenerate dokumen Sertifikat PKL resmi ber-QR Code verifikasi unik setelah pengesahan kelulusan oleh Kaprodi',
+    createdAt: '2026-11-24T08:00:00.000Z',
+  },
+
+  // ==========================================
+  // MODUL 08: INFORMASI JADWAL
+  // ==========================================
   {
     id: 'uc-jdw-01',
     milestoneId: 'ms-sprint-2',
@@ -232,171 +399,5 @@ export const INITIAL_USE_CASES: UseCase[] = [
   },
 ];
 
-export const INITIAL_TASKS: Task[] = [
-  // --- Task Aktif Dashboard ---
-  {
-    id: 'task-dsh-01-ui',
-    useCaseId: 'uc-dsh-01',
-    title: 'Slicing Dashboard.vue: Ganti dummy data Lebron/Steph dengan props auth & penempatan',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'IN_PROGRESS',
-    lastUpdatedAt: '2026-11-24T08:15:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-  {
-    id: 'task-dsh-01-be',
-    useCaseId: 'uc-dsh-01',
-    title: 'Endpoint GET /dashboard: Siapkan relasi PKL aktif & status presensi hari ini',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'GET',
-      route: '/dashboard',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'IN_PROGRESS',
-    lastUpdatedAt: '2026-11-24T08:20:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Profil Siswa ---
-  {
-    id: 'task-prf-01-be',
-    useCaseId: 'uc-prf-01',
-    title: 'Endpoint PATCH /profile: Kunci NIS/Kelas read-only & validasi format kontak',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'PATCH',
-      route: '/profile',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Presensi Check-In ---
-  {
-    id: 'task-abs-01-ui',
-    useCaseId: 'uc-abs-01',
-    title: 'Refactor AttendanceModal.vue: Integrasi kamera WebP & navigasi GPS navigator',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-  {
-    id: 'task-abs-01-be',
-    useCaseId: 'uc-abs-01',
-    title: 'Endpoint POST /kehadiran/check-in: Haversine distance <=100m, foto WebP & server now()',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/kehadiran/check-in',
-    },
-    assigneeId: 'user-smk-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Presensi Check-Out ---
-  {
-    id: 'task-abs-02-be',
-    useCaseId: 'uc-abs-02',
-    title: 'Endpoint POST /kehadiran/check-out: Rekam jam_pulang = now() & foto bukti selesai kerja',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/kehadiran/check-out',
-    },
-    assigneeId: 'user-smk-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Pengajuan Izin/Sakit ---
-  {
-    id: 'task-abs-03-be',
-    useCaseId: 'uc-abs-03',
-    title: 'Endpoint POST /kehadiran/pengajuan-izin: Form Izin/Sakit terpadu & upload surat ke S3',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/kehadiran/pengajuan-izin',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Jurnal Harian ---
-  {
-    id: 'task-jrn-01-ui',
-    useCaseId: 'uc-jrn-01',
-    title: 'Refactor Student/Jurnal/Index.vue: Kunci input tanggal (date.now) & hapus tombol delete',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-  {
-    id: 'task-jrn-01-be',
-    useCaseId: 'uc-jrn-01',
-    title: 'Endpoint POST /jurnal: Kunci tanggal server now(), anti-backdating & unique tanggal per siswa',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/jurnal',
-    },
-    assigneeId: 'user-smk-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-  {
-    id: 'task-jrn-02-be',
-    useCaseId: 'uc-jrn-02',
-    title: 'Endpoint PUT /jurnal/{id}: Proteksi tanggal/paraf & set is_edited = true (Watermark)',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'PUT',
-      route: '/jurnal/{id}',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-
-  // --- Task Bimbingan Laporan ---
-  {
-    id: 'task-bmb-01-ui',
-    useCaseId: 'uc-bmb-01',
-    title: 'Migrasi Student/Bimbingan/Index.vue & Create.vue dari localStorage ke useForm Inertia',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-  {
-    id: 'task-bmb-01-be',
-    useCaseId: 'uc-bmb-01',
-    title: 'Endpoint POST /bimbingan: Simpan catatan konsultasi & canvas tanda tangan digital',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/bimbingan',
-    },
-    assigneeId: 'user-smk-1',
-    status: 'TODO',
-    lastUpdatedAt: '2026-11-24T08:00:00.000Z',
-    createdAt: '2026-11-24T08:00:00.000Z',
-  },
-];
-
+// Papan Tugas dikosongkan total agar pengguna dapat mengisinya sendiri dari antarmuka
+export const INITIAL_TASKS: Task[] = [];

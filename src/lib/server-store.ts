@@ -117,9 +117,9 @@ export const db = {
               password: u.password,
             })),
             projects: rawProjects.length > 0 ? rawProjects : INITIAL_PROJECTS,
-            milestones: rawMilestones.length > 0 ? rawMilestones : INITIAL_MILESTONES,
-            useCases: rawUseCases.length > 0 ? rawUseCases : INITIAL_USE_CASES,
-            tasks: rawTasks.length > 0 ? rawTasks : INITIAL_TASKS,
+            milestones: rawMilestones.length >= INITIAL_MILESTONES.length ? rawMilestones : INITIAL_MILESTONES,
+            useCases: rawUseCases.length >= INITIAL_USE_CASES.length ? rawUseCases : INITIAL_USE_CASES,
+            tasks: rawTasks,
           };
         }
       } catch (err) {
