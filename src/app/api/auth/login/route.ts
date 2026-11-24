@@ -19,21 +19,16 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Pengguna tidak ditemukan dalam tim internal Majastic' },
-        { status: 404 }
+        { error: 'Email atau password salah' },
+        { status: 401 }
       );
     }
 
     // Strict password verification
     const validPassword = (user as any).password || 'majastic123';
     if (password !== validPassword) {
-      const isFallback = (data as any).source === 'fallback';
-      let errorMsg = 'Password salah';
-      if (isFallback) {
-        errorMsg = 'Password salah. (Perhatian: Website masih membaca data lokal/offline karena koneksi database Supabase di Vercel belum aktif. Untuk masuk sementara, gunakan: majastic123)';
-      }
       return NextResponse.json(
-        { error: errorMsg },
+        { error: 'Email atau password salah' },
         { status: 401 }
       );
     }
