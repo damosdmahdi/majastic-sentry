@@ -8,8 +8,8 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email wajib diisi' }, { status: 400 });
+    if (!email?.trim() || !password) {
+      return NextResponse.json({ error: 'Email dan password wajib diisi' }, { status: 400 });
     }
 
     const data = await db.getAll();
@@ -24,9 +24,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Default password check (e.g. majastic123 or user.password)
+    // Strict password verification
     const validPassword = (user as any).password || 'majastic123';
-    if (password && password !== validPassword) {
+    if (password !== validPassword) {
       return NextResponse.json(
         { error: 'Password salah' },
         { status: 401 }

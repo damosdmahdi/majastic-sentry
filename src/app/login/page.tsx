@@ -2,19 +2,21 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, ArrowRight, Loader2, KeyRound } from 'lucide-react';
-import { INITIAL_USERS } from '@/lib/initial-data';
+import { ShieldCheck, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('majastic123');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !password) {
+      setErrorMessage('Email dan password wajib diisi');
+      return;
+    }
 
     setIsLoading(true);
     setErrorMessage('');
@@ -36,34 +38,6 @@ export default function LoginPage() {
       router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || 'Terjadi kesalahan sistem saat login');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Quick 1-click login helper
-  const handleQuickLogin = async (userEmail: string) => {
-    setEmail(userEmail);
-    setPassword('majastic123');
-    setIsLoading(true);
-    setErrorMessage('');
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail, password: 'majastic123' }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Login gagal');
-      }
-
-      router.push('/');
-      router.refresh();
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Login cepat gagal');
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +89,6 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="font-semibold text-slate-700">Password:</label>
-                <span className="text-[10px] text-slate-400">Default: majastic123</span>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
@@ -124,7 +97,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Masukkan password akun Anda"
                   className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-slate-900 focus:border-slate-900 font-mono"
                 />
               </div>
@@ -156,44 +129,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-semibold">
-              <span className="bg-white px-2 text-slate-400">Pilih Cepat Akun Tim</span>
-            </div>
-          </div>
-
-          {/* Quick Team Login Cards */}
-          <div className="space-y-1.5">
-            {INITIAL_USERS.map((user) => (
-              <button
-                key={user.id}
-                type="button"
-                onClick={() => handleQuickLogin(user.email)}
-                disabled={isLoading}
-                className="w-full p-2 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-between text-left group"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-base shrink-0">{user.avatar}</span>
-                  <div className="truncate">
-                    <div className="text-xs font-semibold text-slate-800 group-hover:text-slate-900 truncate">
-                      {user.name}
-                    </div>
-                    <div className="text-[10px] text-slate-400 truncate">
-                      {user.tag || user.role} • {user.email}
-                    </div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-lg group-hover:bg-sky-100 shrink-0">
-                  Masuk &rarr;
-                </span>
-              </button>
-            ))}
-          </div>
 
         </div>
 

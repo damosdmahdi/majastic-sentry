@@ -287,8 +287,6 @@ export default function HomePage() {
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         currentUser={currentUser}
-        onSwitchUser={setCurrentUser}
-        users={users}
         projectName={activeProject.name}
         isSyncing={isSyncing}
         onManualSync={() => fetchData(false)}
