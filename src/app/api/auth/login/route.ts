@@ -12,10 +12,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email dan password wajib diisi' }, { status: 400 });
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+    const customMentorEmail = process.env.MENTOR_EMAIL?.toLowerCase().trim();
+
     const data = await db.getAll();
-    const user = data.users.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase()
+    let user = data.users.find(
+      (u) => u.email.toLowerCase() === cleanEmail
     );
+
+    // Support custom Gmail / Email for Mentor configured in Vercel (MENTOR_EMAIL)
+    if (!user && customMentorEmail && cleanEmail === customMentorEmail) {
+      user = data.users.find((u) => u.role === 'MENTOR');
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -24,8 +32,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Strict password verification
-    const validPassword = (user as any).password || 'majastic123';
+    // Strict password verification (Supports Vercel Environment Variables & Dynamic Config)
+    let validPassword = (user as any).password;
+    if (user.role === 'MENTOR') {
+      validPassword = process.env.MENTOR_PASSWORD || validPassword || 'Adrigodri123';
+    } else {
+      validPassword = process.env.TEAM_PASSWORD || validPassword || 'majastic123';
+    }
+
     if (password !== validPassword) {
       return NextResponse.json(
         { error: 'Email atau password salah' },
@@ -33,12 +47,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const activeEmail = (user.role === 'MENTOR' && customMentorEmail) ? customMentorEmail : user.email;
+
     // Set Session Cookie (30 days)
     const cookieStore = await cookies();
     const sessionData = JSON.stringify({
       id: user.id,
       name: user.name,
-      email: user.email,
+      email: activeEmail,
       role: user.role,
       avatar: user.avatar,
       tag: user.tag,
@@ -54,7 +70,7 @@ export async function POST(req: Request) {
     const safeUser = {
       id: user.id,
       name: user.name,
-      email: user.email,
+      email: activeEmail,
       role: user.role,
       avatar: user.avatar,
       tag: user.tag,
