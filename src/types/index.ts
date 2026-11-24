@@ -55,7 +55,7 @@ export interface IntegrityCheckResult {
 
 export interface Task {
   id: string;
-  useCaseId: string;
+  useCaseId?: string | null;
   title: string;
   type: TaskType;
   endpointSpec?: {

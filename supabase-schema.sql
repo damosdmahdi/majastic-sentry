@@ -76,6 +76,9 @@ ALTER TABLE milestones DISABLE ROW LEVEL SECURITY;
 ALTER TABLE use_cases DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
 
+-- Pastikan use_case_id bersifat opsional (nullable) agar tugas umum / non-use-case dapat dibuat
+ALTER TABLE tasks ALTER COLUMN use_case_id DROP NOT NULL;
+
 -- ========================================================
 -- DATA SEED: USERS (Tim Majastic TEFA)
 -- ========================================================

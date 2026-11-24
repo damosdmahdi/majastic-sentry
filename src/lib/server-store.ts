@@ -237,35 +237,37 @@ export const db = {
           ],
         }, { onConflict: 'id' });
 
-        // 2. Auto-ensure parent milestone & use case exist in Supabase so Foreign Key NEVER fails!
-        const matchingUc = INITIAL_USE_CASES.find((u) => u.id === task.useCaseId);
-        if (matchingUc) {
-          const matchingMs = INITIAL_MILESTONES.find((m) => m.id === matchingUc.milestoneId);
-          if (matchingMs) {
-            await supabase.from('milestones').upsert({
-              id: matchingMs.id,
-              project_id: matchingMs.projectId,
-              title: matchingMs.title,
-              sdlc_type: matchingMs.sdlcType,
-              start_date: matchingMs.startDate,
-              end_date: matchingMs.endDate,
-              status: matchingMs.status,
+        // 2. Auto-ensure parent milestone & use case exist in Supabase if task.useCaseId is provided
+        if (task.useCaseId) {
+          const matchingUc = INITIAL_USE_CASES.find((u) => u.id === task.useCaseId);
+          if (matchingUc) {
+            const matchingMs = INITIAL_MILESTONES.find((m) => m.id === matchingUc.milestoneId);
+            if (matchingMs) {
+              await supabase.from('milestones').upsert({
+                id: matchingMs.id,
+                project_id: matchingMs.projectId,
+                title: matchingMs.title,
+                sdlc_type: matchingMs.sdlcType,
+                start_date: matchingMs.startDate,
+                end_date: matchingMs.endDate,
+                status: matchingMs.status,
+              }, { onConflict: 'id' });
+            }
+
+            await supabase.from('use_cases').upsert({
+              id: matchingUc.id,
+              milestone_id: matchingUc.milestoneId,
+              code: matchingUc.code,
+              title: matchingUc.title,
+              business_goal: matchingUc.businessGoal,
+              figma_url: matchingUc.figmaUrl,
             }, { onConflict: 'id' });
           }
-
-          await supabase.from('use_cases').upsert({
-            id: matchingUc.id,
-            milestone_id: matchingUc.milestoneId,
-            code: matchingUc.code,
-            title: matchingUc.title,
-            business_goal: matchingUc.businessGoal,
-            figma_url: matchingUc.figmaUrl,
-          }, { onConflict: 'id' });
         }
 
         const { error } = await supabase.from('tasks').insert({
           id: task.id,
-          use_case_id: task.useCaseId,
+          use_case_id: task.useCaseId || null,
           title: task.title,
           type: task.type,
           endpoint_spec: task.endpointSpec,

@@ -186,7 +186,7 @@ export default function HomePage() {
 
   // Add Task
   const handleAddTask = async (taskData: {
-    useCaseId: string;
+    useCaseId?: string | null;
     title: string;
     type: TaskType;
     endpointSpec?: { method: HttpMethod; route: string };

@@ -11,7 +11,7 @@ interface AddTaskModalProps {
   initialUseCaseId?: string;
   users: User[];
   onAddTask: (taskData: {
-    useCaseId: string;
+    useCaseId?: string | null;
     title: string;
     type: TaskType;
     endpointSpec?: { method: HttpMethod; route: string };
@@ -27,7 +27,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   users,
   onAddTask,
 }) => {
-  const [selectedUseCaseId, setSelectedUseCaseId] = useState(initialUseCaseId || useCases[0]?.id || '');
+  const [selectedUseCaseId, setSelectedUseCaseId] = useState<string | null>(initialUseCaseId || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
@@ -40,10 +40,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   useEffect(() => {
     if (initialUseCaseId) {
       setSelectedUseCaseId(initialUseCaseId);
-    } else if (useCases.length > 0 && !selectedUseCaseId) {
-      setSelectedUseCaseId(useCases[0].id);
+    } else {
+      setSelectedUseCaseId(null);
     }
-  }, [initialUseCaseId, useCases, selectedUseCaseId]);
+  }, [initialUseCaseId, isOpen]);
 
   // Filter Use Cases based on search query (code or title)
   const filteredUseCases = useMemo(() => {
@@ -63,10 +63,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !assigneeId || !selectedUseCaseId) return;
+    if (!title.trim() || !assigneeId) return;
 
     onAddTask({
-      useCaseId: selectedUseCaseId,
+      useCaseId: selectedUseCaseId || undefined,
       title: title.trim(),
       type,
       endpointSpec: type === 'ENDPOINT' ? { method, route: route.trim() } : undefined,
@@ -140,7 +140,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <span className="text-slate-400">Pilih salah satu Use Case...</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">
+                        UMUM
+                      </span>
+                      <span className="font-medium text-slate-700 text-xs truncate max-w-[280px]">
+                        Tugas Umum / Non-Use Case (Opsional)
+                      </span>
+                    </div>
                   )}
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isPickerOpen ? 'rotate-180' : ''}`} />
                 </div>
@@ -162,7 +169,29 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 </div>
 
                 {/* Filtered List */}
-                <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                  {/* Option: Tugas Umum / Non-Use Case */}
+                  <div
+                    onClick={() => {
+                      setSelectedUseCaseId(null);
+                      setIsPickerOpen(false);
+                      setSearchQuery('');
+                    }}
+                    className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
+                      selectedUseCaseId === null
+                        ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200">
+                        UMUM
+                      </span>
+                      <span className="text-xs">Tugas Umum / Non-Use Case (Setup, Config, Maintenance)</span>
+                    </div>
+                    {selectedUseCaseId === null && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                  </div>
+
                   {filteredUseCases.length === 0 ? (
                     <div className="p-3 text-center text-slate-400 text-[11px]">
                       Tidak ada Use Case yang cocok dengan pencarian

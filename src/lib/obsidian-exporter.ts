@@ -132,6 +132,44 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
   });
   }
 
+  // Export General Tasks (without Use Case)
+  const generalActiveTasks = activeTasks.filter((t) => !t.useCaseId);
+  if (generalActiveTasks.length > 0) {
+    md += `### 📋 Tugas Umum & Non-Use Case (Maintenance, Setup, Config)\n\n`;
+    generalActiveTasks.forEach((task) => {
+      const assignee = userMap.get(task.assigneeId);
+      const assigneeName = assignee ? `[[${assignee.name}]] (${assignee.tag || assignee.role})` : 'Unassigned';
+      const isChecked = task.status === 'DONE' ? 'x' : ' ';
+
+      let badge = '';
+      if (task.type === 'ENDPOINT' && task.endpointSpec) {
+        badge = `\`${task.endpointSpec.method} ${task.endpointSpec.route}\``;
+      } else if (task.type === 'UI_SLICING') {
+        badge = `🎨 UI Slicing`;
+      } else {
+        badge = `📋 Tugas Umum`;
+      }
+
+      md += `- [${isChecked}] **${task.title}** (${badge})
+  - **Assignee:** ${assigneeName}
+  - **Status:** \`${task.status}\` | **Update Terakhir:** ${new Date(task.lastUpdatedAt).toLocaleDateString('id-ID')}
+`;
+
+      if (task.githubPrUrl) {
+        md += `  - **Pull Request:** [PR #${task.prNumber || 'Link'}](${task.githubPrUrl})\n`;
+      }
+
+      if (task.status === 'BLOCKED' && task.blockerNote) {
+        md += `  - 🚨 **Kendala/Blocker Aktif:** ${task.blockerNote}\n`;
+      }
+
+      if (task.integrityCheck?.status === 'WARNING') {
+        md += `  - ⚠️ **Peringatan Guardrail:** ${task.integrityCheck.message}\n`;
+      }
+    });
+    md += '\n';
+  }
+
   md += `---
 
 ## 🚨 Catatan Kritis Mentor

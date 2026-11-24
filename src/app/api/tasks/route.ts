@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     // Creating a new task
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      useCaseId: body.useCaseId,
+      useCaseId: body.useCaseId || null,
       title: body.title,
       type: body.type || 'GENERAL',
       endpointSpec: body.endpointSpec,

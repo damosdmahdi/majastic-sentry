@@ -222,7 +222,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                 ) : (
                   colTasks.map((task) => {
                     const assignee = userMap.get(task.assigneeId);
-                    const useCase = useCaseMap.get(task.useCaseId);
+                    const useCase = task.useCaseId ? useCaseMap.get(task.useCaseId) : undefined;
 
                     // Check Stale (>48h)
                     const diffHours = (now.getTime() - new Date(task.lastUpdatedAt).getTime()) / (1000 * 3600);
@@ -238,11 +238,15 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                         }`}
                       >
                         {/* Use Case Reference Tag */}
-                        {useCase && (
+                        {useCase ? (
                           <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                             <span>{useCase.code}</span>
                             <span>•</span>
                             <span className="truncate max-w-[140px]">{useCase.title}</span>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                            <span>Tugas Umum</span>
                           </div>
                         )}
 
