@@ -51,6 +51,54 @@ export const db = {
         ]);
 
         if (!usersRes.error && usersRes.data?.length) {
+          const rawProjects = (projRes.data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            description: p.description,
+            githubRepo: p.github_repo,
+            protectedFiles: p.protected_files || [],
+            createdAt: p.created_at,
+          }));
+
+          const rawMilestones = (msRes.data || []).map((m: any) => ({
+            id: m.id,
+            projectId: m.project_id,
+            title: m.title,
+            sdlcType: m.sdlc_type,
+            startDate: m.start_date,
+            endDate: m.end_date,
+            status: m.status,
+          }));
+
+          const rawUseCases = (ucRes.data || []).map((uc: any) => ({
+            id: uc.id,
+            milestoneId: uc.milestone_id,
+            code: uc.code,
+            title: uc.title,
+            businessGoal: uc.business_goal,
+            figmaUrl: uc.figma_url,
+            createdAt: uc.created_at,
+          }));
+
+          const rawTasks = (tasksRes.data || []).map((t: any) => ({
+            id: t.id,
+            useCaseId: t.use_case_id,
+            title: t.title,
+            type: t.type,
+            endpointSpec: t.endpoint_spec,
+            assigneeId: t.assignee_id,
+            status: t.status,
+            blockerNote: t.blocker_note,
+            githubPrUrl: t.github_pr_url,
+            prNumber: t.pr_number,
+            integrityCheck: t.integrity_check,
+            isArchived: Boolean(t.is_archived),
+            lastUpdatedAt: t.last_updated_at,
+            reviewedAt: t.reviewed_at,
+            createdAt: t.created_at,
+          }));
+
           return {
             source: 'supabase',
             users: (usersRes.data || []).map((u: any) => ({
@@ -62,50 +110,10 @@ export const db = {
               tag: u.tag,
               password: u.password,
             })),
-            projects: (projRes.data || []).map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              slug: p.slug,
-              description: p.description,
-              githubRepo: p.github_repo,
-              protectedFiles: p.protected_files || [],
-              createdAt: p.created_at,
-            })),
-            milestones: (msRes.data || []).map((m: any) => ({
-              id: m.id,
-              projectId: m.project_id,
-              title: m.title,
-              sdlcType: m.sdlc_type,
-              startDate: m.start_date,
-              endDate: m.end_date,
-              status: m.status,
-            })),
-            useCases: (ucRes.data || []).map((uc: any) => ({
-              id: uc.id,
-              milestoneId: uc.milestone_id,
-              code: uc.code,
-              title: uc.title,
-              businessGoal: uc.business_goal,
-              figmaUrl: uc.figma_url,
-              createdAt: uc.created_at,
-            })),
-            tasks: (tasksRes.data || []).map((t: any) => ({
-              id: t.id,
-              useCaseId: t.use_case_id,
-              title: t.title,
-              type: t.type,
-              endpointSpec: t.endpoint_spec,
-              assigneeId: t.assignee_id,
-              status: t.status,
-              blockerNote: t.blocker_note,
-              githubPrUrl: t.github_pr_url,
-              prNumber: t.pr_number,
-              integrityCheck: t.integrity_check,
-              isArchived: Boolean(t.is_archived),
-              lastUpdatedAt: t.last_updated_at,
-              reviewedAt: t.reviewed_at,
-              createdAt: t.created_at,
-            })),
+            projects: rawProjects.length > 0 ? rawProjects : INITIAL_PROJECTS,
+            milestones: rawMilestones.length > 0 ? rawMilestones : INITIAL_MILESTONES,
+            useCases: rawUseCases.length > 0 ? rawUseCases : INITIAL_USE_CASES,
+            tasks: rawTasks.length > 0 ? rawTasks : INITIAL_TASKS,
           };
         }
       } catch (err) {
