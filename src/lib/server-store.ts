@@ -152,7 +152,21 @@ export const db = {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('use_cases').insert({
+        // Auto-ensure parent milestone exists to prevent FK constraint error
+        const matchingMs = INITIAL_MILESTONES.find((m) => m.id === useCase.milestoneId);
+        if (matchingMs) {
+          await supabase.from('milestones').upsert({
+            id: matchingMs.id,
+            project_id: matchingMs.projectId,
+            title: matchingMs.title,
+            sdlc_type: matchingMs.sdlcType,
+            start_date: matchingMs.startDate,
+            end_date: matchingMs.endDate,
+            status: matchingMs.status,
+          }, { onConflict: 'id' });
+        }
+
+        const { error } = await supabase.from('use_cases').insert({
           id: useCase.id,
           milestone_id: useCase.milestoneId,
           code: useCase.code,
@@ -160,8 +174,14 @@ export const db = {
           business_goal: useCase.businessGoal,
           figma_url: useCase.figmaUrl,
         });
+
+        if (error) {
+          console.error('Supabase addUseCase error:', error);
+          throw new Error(`Gagal menyimpan Use Case ke Supabase: ${error.message}`);
+        }
       } catch (err) {
-        console.warn('Supabase addUseCase failed:', err);
+        console.error('Supabase addUseCase exception:', err);
+        throw err;
       }
     }
 
@@ -177,7 +197,33 @@ export const db = {
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('tasks').insert({
+        // Auto-ensure parent milestone & use case exist in Supabase so Foreign Key NEVER fails!
+        const matchingUc = INITIAL_USE_CASES.find((u) => u.id === task.useCaseId);
+        if (matchingUc) {
+          const matchingMs = INITIAL_MILESTONES.find((m) => m.id === matchingUc.milestoneId);
+          if (matchingMs) {
+            await supabase.from('milestones').upsert({
+              id: matchingMs.id,
+              project_id: matchingMs.projectId,
+              title: matchingMs.title,
+              sdlc_type: matchingMs.sdlcType,
+              start_date: matchingMs.startDate,
+              end_date: matchingMs.endDate,
+              status: matchingMs.status,
+            }, { onConflict: 'id' });
+          }
+
+          await supabase.from('use_cases').upsert({
+            id: matchingUc.id,
+            milestone_id: matchingUc.milestoneId,
+            code: matchingUc.code,
+            title: matchingUc.title,
+            business_goal: matchingUc.businessGoal,
+            figma_url: matchingUc.figmaUrl,
+          }, { onConflict: 'id' });
+        }
+
+        const { error } = await supabase.from('tasks').insert({
           id: task.id,
           use_case_id: task.useCaseId,
           title: task.title,
@@ -190,8 +236,14 @@ export const db = {
           is_archived: false,
           last_updated_at: task.lastUpdatedAt,
         });
+
+        if (error) {
+          console.error('Supabase addTask error:', error);
+          throw new Error(`Gagal menyimpan Tugas ke Supabase: ${error.message}`);
+        }
       } catch (err) {
-        console.warn('Supabase addTask failed:', err);
+        console.error('Supabase addTask exception:', err);
+        throw err;
       }
     }
 
@@ -219,9 +271,14 @@ export const db = {
         if (patch.reviewedAt !== undefined) updatePayload.reviewed_at = patch.reviewedAt;
         if (patch.isArchived !== undefined) updatePayload.is_archived = patch.isArchived;
 
-        await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+        const { error } = await supabase.from('tasks').update(updatePayload).eq('id', taskId);
+        if (error) {
+          console.error('Supabase updateTask error:', error);
+          throw new Error(`Gagal memperbarui Tugas di Supabase: ${error.message}`);
+        }
       } catch (err) {
-        console.warn('Supabase updateTask failed:', err);
+        console.error('Supabase updateTask exception:', err);
+        throw err;
       }
     }
 
