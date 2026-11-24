@@ -119,25 +119,31 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </span>
             </label>
 
-            {/* Selected Use Case Trigger Card */}
-            <div
-              onClick={() => setIsPickerOpen(!isPickerOpen)}
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition-colors"
-            >
-              {selectedUseCase ? (
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded">
-                    {selectedUseCase.code}
-                  </span>
-                  <span className="font-medium text-slate-800 text-xs truncate max-w-[280px]">
-                    {selectedUseCase.title}
-                  </span>
+            {useCases.length === 0 ? (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
+                ⚠️ Belum ada Use Case. Silakan buat Use Case terlebih dahulu di tab <strong>Use Case & Bisnis</strong> sebelum membuat tugas teknis.
+              </div>
+            ) : (
+              <>
+                {/* Selected Use Case Trigger Card */}
+                <div
+                  onClick={() => setIsPickerOpen(!isPickerOpen)}
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer flex items-center justify-between transition-colors"
+                >
+                  {selectedUseCase ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded">
+                        {selectedUseCase.code}
+                      </span>
+                      <span className="font-medium text-slate-800 text-xs truncate max-w-[280px]">
+                        {selectedUseCase.title}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">Pilih salah satu Use Case...</span>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isPickerOpen ? 'rotate-180' : ''}`} />
                 </div>
-              ) : (
-                <span className="text-slate-400">Pilih salah satu Use Case...</span>
-              )}
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isPickerOpen ? 'rotate-180' : ''}`} />
-            </div>
 
             {/* Search Dropdown / Picker Box */}
             {isPickerOpen && (
@@ -192,7 +198,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 </div>
               </div>
             )}
-          </div>
+          </>
+        )}
+      </div>
 
           {/* Type Selector (Endpoint vs Slicing vs General) */}
           <div>
@@ -322,7 +330,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors shadow-sm"
+              disabled={!title.trim() || useCases.length === 0}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-sm"
             >
               Tambahkan Tugas
             </button>

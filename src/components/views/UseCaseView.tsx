@@ -49,8 +49,26 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
 
       {/* Use Cases Cards */}
       <div className="space-y-6">
-        {useCases.map((uc) => {
-          // Calculates progress across ALL tasks for this Use Case (persisted even when archived from Kanban!)
+        {useCases.length === 0 ? (
+          <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center font-bold text-lg">
+              🎯
+            </div>
+            <h3 className="font-bold text-sm text-slate-800">Belum Ada Use Case</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Hubungkan target bisnis, modul endpoint, dan frame Figma tim Anda dengan membuat Use Case pertama.
+            </p>
+            <button
+              onClick={onOpenAddUseCaseModal}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Buat Use Case Pertama</span>
+            </button>
+          </div>
+        ) : (
+          useCases.map((uc) => {
+            // Calculates progress across ALL tasks for this Use Case (persisted even when archived from Kanban!)
           const ucTasks = tasks.filter((t) => t.useCaseId === uc.id);
           const doneTasks = ucTasks.filter((t) => t.status === 'DONE').length;
           const isComplete = ucTasks.length > 0 && doneTasks === ucTasks.length;
@@ -159,7 +177,7 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
 
             </div>
           );
-        })}
+        }))}
       </div>
 
     </div>

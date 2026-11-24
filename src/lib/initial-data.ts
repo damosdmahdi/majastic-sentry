@@ -51,10 +51,10 @@ export const INITIAL_USERS: User[] = [
 export const INITIAL_PROJECTS: Project[] = [
   {
     id: 'proj-1',
-    name: 'Majastic Core App (Laravel Inertia)',
+    name: process.env.PROJECT_NAME || 'Majastic Core App (Laravel Inertia)',
     slug: 'majastic-core',
     description: 'Platform utama internal Majastic berbasis Laravel 11, Inertia.js, dan Vue 3',
-    githubRepo: 'majastic/core-app',
+    githubRepo: process.env.GITHUB_REPO || 'damosdmahdi/majastic-sentry',
     // Guardrail disesuaikan khusus untuk arsitektur Laravel Inertia Vue
     protectedFiles: [
       'app/Http/Middleware/HandleInertiaRequests.php',
@@ -67,7 +67,7 @@ export const INITIAL_PROJECTS: Project[] = [
       '.env.example',
       'bootstrap/app.php'
     ],
-    createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -75,128 +75,15 @@ export const INITIAL_MILESTONES: Milestone[] = [
   {
     id: 'ms-1',
     projectId: 'proj-1',
-    title: 'Sprint 1 - Autentikasi & Portal Siswa',
+    title: 'Sprint 1 - Inisialisasi & Fitur Utama',
     sdlcType: 'AGILE_SPRINT',
-    startDate: new Date(Date.now() - 6 * 86400000).toISOString(),
-    endDate: new Date(Date.now() + 1 * 86400000).toISOString(),
+    startDate: new Date().toISOString(),
+    endDate: new Date(Date.now() + 14 * 86400000).toISOString(),
     status: 'ACTIVE',
   },
 ];
 
-export const INITIAL_USE_CASES: UseCase[] = [
-  {
-    id: 'uc-1',
-    milestoneId: 'ms-1',
-    code: 'UC-01',
-    title: 'Autentikasi & Registrasi Akun Siswa',
-    businessGoal: 'Memastikan siswa SMK dan anggota tim dapat mendaftar mandiri menggunakan email sekolah dan login via sesi Inertia aman.',
-    figmaUrl: 'https://www.figma.com/file/sample/Majastic-Auth-Design',
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'uc-2',
-    milestoneId: 'ms-1',
-    code: 'UC-02',
-    title: 'Dashboard Siswa & Profil Pengguna',
-    businessGoal: 'Memberikan tampilan ringkas bagi pengguna untuk melihat progres tugas aktif mereka dalam satu layar.',
-    figmaUrl: 'https://www.figma.com/file/sample/Majastic-Dashboard',
-    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-  },
-];
+export const INITIAL_USE_CASES: UseCase[] = [];
 
-export const INITIAL_TASKS: Task[] = [
-  {
-    id: 'task-1',
-    useCaseId: 'uc-1',
-    title: 'Controller & Route Registrasi Siswa (RegisteredUserController@store)',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/register',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'DONE',
-    githubPrUrl: 'https://github.com/majastic/core-app/pull/14',
-    prNumber: 14,
-    integrityCheck: {
-      status: 'PASSED',
-      violatedFiles: [],
-      checkedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-      message: '✅ Semua file aman. Tidak ada perubahan pada file konfigurasi arsitektur Laravel.',
-    },
-    isArchived: false,
-    lastUpdatedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    reviewedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'task-2',
-    useCaseId: 'uc-1',
-    title: 'Controller & Route Login Sesi Inertia (AuthenticatedSessionController@store)',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'POST',
-      route: '/login',
-    },
-    assigneeId: 'user-smk-1',
-    status: 'REVIEW',
-    githubPrUrl: 'https://github.com/majastic/core-app/pull/18',
-    prNumber: 18,
-    integrityCheck: {
-      status: 'WARNING',
-      violatedFiles: ['app/Http/Middleware/HandleInertiaRequests.php'],
-      checkedAt: new Date(Date.now() - 4 * 3600000).toISOString(),
-      message: '⚠️ AI-Diff Alert: File dilindungi "HandleInertiaRequests.php" terdeteksi dimodifikasi pada PR ini. Harap cek kembali sebelum merge!',
-    },
-    isArchived: false,
-    lastUpdatedAt: new Date(Date.now() - 4 * 3600000).toISOString(),
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'task-3',
-    useCaseId: 'uc-1',
-    title: 'Slicing Komponen Vue: resources/js/Pages/Auth/Login.vue',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'DONE',
-    githubPrUrl: 'https://github.com/majastic/core-app/pull/15',
-    prNumber: 15,
-    integrityCheck: {
-      status: 'PASSED',
-      violatedFiles: [],
-      checkedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-      message: '✅ Validasi struktur komponen Vue lolos standar.',
-    },
-    isArchived: false,
-    lastUpdatedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-    reviewedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-  },
-  {
-    id: 'task-4',
-    useCaseId: 'uc-2',
-    title: 'Route & Controller Profil (ProfileController@edit & update)',
-    type: 'ENDPOINT',
-    endpointSpec: {
-      method: 'GET',
-      route: '/profile',
-    },
-    assigneeId: 'user-junior-1',
-    status: 'IN_PROGRESS',
-    isArchived: false,
-    lastUpdatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-  {
-    id: 'task-5',
-    useCaseId: 'uc-2',
-    title: 'Slicing Komponen Vue: resources/js/Pages/Profile/Edit.vue',
-    type: 'UI_SLICING',
-    assigneeId: 'user-ui-1',
-    status: 'BLOCKED',
-    blockerNote: 'Menunggu konfirmasi palet warna dark-mode dan icon pack resmi dari Figma tim UI pusat.',
-    isArchived: false,
-    lastUpdatedAt: new Date(Date.now() - 5 * 3600000).toISOString(),
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-];
+export const INITIAL_TASKS: Task[] = [];
+

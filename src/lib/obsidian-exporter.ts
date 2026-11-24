@@ -76,7 +76,10 @@ tags:
 
 `;
 
-  useCases.forEach((uc) => {
+  if (useCases.length === 0) {
+    md += `*(Belum ada data Use Case terdaftar pada Sprint ini. Silakan buat Use Case pertama di tab Use Case & Bisnis)*\n\n`;
+  } else {
+    useCases.forEach((uc) => {
     // Show active tasks for this usecase
     const ucActiveTasks = activeTasks.filter((t) => t.useCaseId === uc.id);
     const ucAllTasks = tasks.filter((t) => t.useCaseId === uc.id);
@@ -127,6 +130,7 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
       md += '\n';
     }
   });
+  }
 
   md += `---
 
