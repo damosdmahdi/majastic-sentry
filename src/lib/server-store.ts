@@ -51,15 +51,21 @@ export const db = {
         ]);
 
         if (!usersRes.error && usersRes.data?.length) {
-          const rawProjects = (projRes.data || []).map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            description: p.description,
-            githubRepo: p.github_repo,
-            protectedFiles: p.protected_files || [],
-            createdAt: p.created_at,
-          }));
+          const rawProjects = (projRes.data || []).map((p: any) => {
+            const rawRepo = p.github_repo;
+            const normalizedRepo = (!rawRepo || rawRepo === 'majastic/core-app' || rawRepo === 'damosdmahdi/majastic-sentry')
+              ? (process.env.GITHUB_REPO || 'TefaMajastic/epkl-core')
+              : rawRepo;
+            return {
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              description: p.description,
+              githubRepo: normalizedRepo,
+              protectedFiles: p.protected_files || [],
+              createdAt: p.created_at,
+            };
+          });
 
           const rawMilestones = (msRes.data || []).map((m: any) => ({
             id: m.id,

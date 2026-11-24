@@ -93,12 +93,13 @@ VALUES (
     'Majastic E-PKL (Laravel 11 + Inertia.js + Vue 3)',
     'majastic-e-pkl',
     'Sistem Informasi Manajemen Praktik Kerja Lapangan (PKL) SMK berbasis Laravel 11, Inertia.js, dan Vue 3',
-    'damosdmahdi/majastic-sentry',
+    'TefaMajastic/epkl-core',
     '["app/Http/Middleware/HandleInertiaRequests.php", "vite.config.js", "vite.config.ts", "composer.json", "package.json", "docker-compose.yml", "compose.yaml", ".env.example", "bootstrap/app.php"]'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
+    github_repo = EXCLUDED.github_repo,
     protected_files = EXCLUDED.protected_files;
 
 -- ========================================================

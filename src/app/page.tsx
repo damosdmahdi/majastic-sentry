@@ -373,6 +373,7 @@ export default function HomePage() {
           setIsCheckPrModalOpen(false);
           setSelectedTaskForPr(null);
         }}
+        repo={activeProject?.githubRepo || 'TefaMajastic/epkl-core'}
         task={selectedTaskForPr}
         onPrChecked={handlePrChecked}
       />

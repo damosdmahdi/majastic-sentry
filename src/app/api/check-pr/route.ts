@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     let targetPrNumber = prNumber;
     let targetRepo = repo;
 
-    // Parse PR URL if provided (e.g. https://github.com/majastic/core-app/pull/18)
+    // Parse PR URL if provided (e.g. https://github.com/TefaMajastic/epkl-core/pull/7)
     if (prUrl) {
       const match = prUrl.match(/github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/);
       if (match) {
@@ -26,10 +26,23 @@ export async function POST(req: Request) {
 
     const data = await db.getAll();
     const project = data.projects[0]; // Active project
-    const protectedFiles = project?.protectedFiles || ['docker-compose.yml', '.env.example', 'package.json'];
+    const defaultRepo = project?.githubRepo || process.env.GITHUB_REPO || 'TefaMajastic/epkl-core';
+    const protectedFiles = project?.protectedFiles || [
+      'app/Http/Middleware/HandleInertiaRequests.php',
+      'vite.config.js',
+      'vite.config.ts',
+      'composer.json',
+      'package.json',
+      'docker-compose.yml',
+      'compose.yaml',
+      '.env.example',
+      'bootstrap/app.php'
+    ];
+
+    const effectiveRepo = targetRepo || defaultRepo;
 
     const result = await inspectPullRequest({
-      repo: targetRepo || project?.githubRepo || 'majastic/core-app',
+      repo: effectiveRepo,
       prNumber: targetPrNumber,
       protectedFiles,
     });
@@ -37,7 +50,7 @@ export async function POST(req: Request) {
     // If taskId is provided, update task with result
     if (taskId) {
       await db.updateTask(taskId, {
-        githubPrUrl: prUrl || `https://github.com/${targetRepo || project?.githubRepo}/pull/${targetPrNumber}`,
+        githubPrUrl: prUrl || `https://github.com/${effectiveRepo}/pull/${targetPrNumber}`,
         prNumber: targetPrNumber,
         integrityCheck: result,
       });

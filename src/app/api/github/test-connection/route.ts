@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const project = data.projects[0];
 
     const token = body.token || process.env.GITHUB_PAT;
-    const targetRepo = body.repo || project?.githubRepo || 'majastic/core-app';
+    const targetRepo = body.repo || project?.githubRepo || process.env.GITHUB_REPO || 'TefaMajastic/epkl-core';
 
     if (!token) {
       return NextResponse.json({

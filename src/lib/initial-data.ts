@@ -54,7 +54,7 @@ export const INITIAL_PROJECTS: Project[] = [
     name: process.env.PROJECT_NAME || 'Majastic E-PKL (Laravel 11 + Inertia.js + Vue 3)',
     slug: 'majastic-e-pkl',
     description: 'Sistem Informasi Manajemen Praktik Kerja Lapangan (PKL) SMK berbasis Laravel 11, Inertia.js, dan Vue 3',
-    githubRepo: process.env.GITHUB_REPO || 'damosdmahdi/majastic-sentry',
+    githubRepo: process.env.GITHUB_REPO || 'TefaMajastic/epkl-core',
     // Guardrail disesuaikan khusus untuk arsitektur Laravel Inertia Vue
     protectedFiles: [
       'app/Http/Middleware/HandleInertiaRequests.php',

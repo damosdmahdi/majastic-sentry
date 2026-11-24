@@ -8,6 +8,7 @@ interface CheckPrModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
+  repo?: string;
   onPrChecked: (taskId: string, prUrl: string, prNumber: number, result: IntegrityCheckResult) => void;
 }
 
@@ -15,6 +16,7 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
   isOpen,
   onClose,
   task,
+  repo = 'TefaMajastic/epkl-core',
   onPrChecked,
 }) => {
   const [prInput, setPrInput] = useState(task?.githubPrUrl || (task?.prNumber ? String(task.prNumber) : ''));
@@ -41,7 +43,7 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
         if (match) prNumber = parseInt(match[1], 10);
       } else {
         prNumber = parseInt(prInput.trim(), 10);
-        prUrl = `https://github.com/majastic/core-app/pull/${prNumber}`;
+        prUrl = `https://github.com/${repo}/pull/${prNumber}`;
       }
 
       const res = await fetch('/api/check-pr', {
@@ -49,6 +51,7 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           taskId: task.id,
+          repo,
           prNumber,
           prUrl,
         }),
@@ -114,7 +117,7 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
                   required
                   value={prInput}
                   onChange={(e) => setPrInput(e.target.value)}
-                  placeholder="Contoh: 18 atau https://github.com/majastic/core-app/pull/18"
+                  placeholder={`Contoh: 7 atau https://github.com/${repo}/pull/7`}
                   className="flex-1 px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-xs font-mono"
                 />
                 <button
