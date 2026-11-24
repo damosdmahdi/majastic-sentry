@@ -52,6 +52,7 @@ export const db = {
 
         if (!usersRes.error && usersRes.data?.length) {
           return {
+            source: 'supabase',
             users: (usersRes.data || []).map((u: any) => ({
               id: u.id,
               name: u.name,
@@ -115,6 +116,7 @@ export const db = {
     // Fallback Local Memory Store
     const local = getLocalStore();
     return {
+      source: 'fallback',
       users: local.users,
       projects: local.projects,
       milestones: local.milestones,
