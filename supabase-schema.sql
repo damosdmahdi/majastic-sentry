@@ -76,6 +76,13 @@ ALTER TABLE milestones DISABLE ROW LEVEL SECURITY;
 ALTER TABLE use_cases DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
 
+-- Pastikan role service_role memiliki hak akses penuh pada schema public (tanpa membuka anon ke publik)
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
 -- Pastikan use_case_id bersifat opsional (nullable) agar tugas umum / non-use-case dapat dibuat
 ALTER TABLE tasks ALTER COLUMN use_case_id DROP NOT NULL;
 

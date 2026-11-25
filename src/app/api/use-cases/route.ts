@@ -8,7 +8,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const existingCount = db.getUseCases().filter((u) => u.milestoneId === body.milestoneId).length;
+    const allData = await db.getAll();
+    const existingCount = allData.useCases.filter((u) => u.milestoneId === body.milestoneId).length;
     const nextCode = `UC-${String(existingCount + 1).padStart(2, '0')}`;
 
     const newUseCase: UseCase = {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    const saved = db.addUseCase(newUseCase);
+    const saved = await db.addUseCase(newUseCase);
     return NextResponse.json({ success: true, useCase: saved });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

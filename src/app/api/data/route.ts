@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/server-store';
-import { isSupabaseConfigured } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +10,7 @@ export async function GET() {
   return NextResponse.json({
     ...data,
     users: safeUsers,
-    _source: isSupabaseConfigured() ? 'supabase' : 'local_fallback',
+    _source: data.source,
+    dbError: data.error || null,
   });
 }

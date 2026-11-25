@@ -30,7 +30,7 @@ import { AddTaskModal } from '@/components/Modals/AddTaskModal';
 import { CheckPrModal } from '@/components/Modals/CheckPrModal';
 import { BlockerModal } from '@/components/Modals/BlockerModal';
 import { generateObsidianWeeklyMarkdown } from '@/lib/obsidian-exporter';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
@@ -48,6 +48,7 @@ export default function HomePage() {
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
+  const [dbError, setDbError] = useState<string | null>(null);
 
   // Check user authentication session on mount
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function HomePage() {
       const res = await fetch('/api/data');
       if (res.ok) {
         const data = await res.json();
+        setDbError(data.dbError || null);
         if (data.projects?.length) setProjects(data.projects);
         if (data.milestones?.length) setMilestones(data.milestones);
         if (data.useCases?.length) setUseCases(data.useCases);
@@ -146,18 +148,26 @@ export default function HomePage() {
       patch.reviewedAt = new Date().toISOString();
     }
 
+    const previousTasks = tasks;
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, ...patch } : t))
     );
 
     try {
-      await fetch('/api/tasks', {
+      const res = await fetch('/api/tasks', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: taskId, ...patch }),
       });
-    } catch (err) {
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setTasks(previousTasks);
+        alert(`Gagal memperbarui status tugas: ${data.error || 'Terjadi kesalahan pada server'}`);
+      }
+    } catch (err: any) {
       console.error('Failed to sync task status to backend:', err);
+      setTasks(previousTasks);
+      alert(`Terjadi kesalahan jaringan saat memperbarui status: ${err.message}`);
     }
   };
 
@@ -176,11 +186,16 @@ export default function HomePage() {
         body: JSON.stringify(useCaseData),
       });
       const data = await res.json();
-      if (data.success && data.useCase) {
+      if (!res.ok || !data.success) {
+        alert(`Gagal menyimpan Use Case: ${data.error || 'Terjadi kesalahan pada server'}`);
+        return;
+      }
+      if (data.useCase) {
         setUseCases((prev) => [...prev, data.useCase]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add use case:', err);
+      alert(`Terjadi kesalahan jaringan saat menambah Use Case: ${err.message}`);
     }
   };
 
@@ -214,18 +229,26 @@ export default function HomePage() {
 
   // Archive Completed Tasks (Sprint Cutoff)
   const handleArchiveCompletedTasks = async () => {
+    const previousTasks = tasks;
     setTasks((prev) =>
       prev.map((t) => (t.status === 'DONE' ? { ...t, isArchived: true } : t))
     );
 
     try {
-      await fetch('/api/tasks', {
+      const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'ARCHIVE_COMPLETED' }),
       });
-    } catch (err) {
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setTasks(previousTasks);
+        alert(`Gagal mengarsipkan tugas: ${data.error || 'Terjadi kesalahan pada server'}`);
+      }
+    } catch (err: any) {
       console.error('Failed to archive completed tasks on backend:', err);
+      setTasks(previousTasks);
+      alert(`Terjadi kesalahan jaringan saat mengarsipkan tugas: ${err.message}`);
     }
   };
 
@@ -300,6 +323,20 @@ export default function HomePage() {
 
       {/* Main Content Area based on Selected Tab */}
       <main className="flex-1">
+        {dbError && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-xl px-4 py-3 text-xs flex items-start gap-2.5 shadow-xs">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Koneksi Database Supabase Bermasalah:</span>{' '}
+                <span>{dbError}</span>
+                <span className="block text-[11px] text-rose-700 mt-0.5">
+                  Data yang tampil sementara menggunakan cache/fallback lokal sampai izin database Supabase diperbaiki.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         {currentTab === 'board' && (
           <TaskBoardView
             tasks={tasks}
@@ -308,7 +345,7 @@ export default function HomePage() {
             currentUser={currentUser}
             onUpdateTaskStatus={handleUpdateTaskStatus}
             onOpenAddTaskModal={() => {
-              setSelectedUseCaseIdForTask(useCases[0]?.id || '');
+              setSelectedUseCaseIdForTask('');
               setIsAddTaskModalOpen(true);
             }}
             onOpenBlockerModal={(task) => {
@@ -367,7 +404,7 @@ export default function HomePage() {
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
         useCases={useCases}
-        initialUseCaseId={selectedUseCaseIdForTask || useCases[0]?.id || ''}
+        initialUseCaseId={selectedUseCaseIdForTask || undefined}
         users={users}
         onAddTask={handleAddTask}
       />
