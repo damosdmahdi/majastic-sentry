@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, GitPullRequest, ShieldCheck, ShieldAlert, AlertOctagon, Loader2, ExternalLink } from 'lucide-react';
 import { Task, IntegrityCheckResult } from '@/types';
 
@@ -9,7 +9,7 @@ interface CheckPrModalProps {
   onClose: () => void;
   task: Task | null;
   repo?: string;
-  onPrChecked: (taskId: string, prUrl: string, prNumber: number, result: IntegrityCheckResult) => void;
+  onPrChecked: (taskId: string, updatedTask: Task | null) => void;
 }
 
 export const CheckPrModal: React.FC<CheckPrModalProps> = ({
@@ -23,6 +23,14 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<IntegrityCheckResult | null>(task?.integrityCheck || null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (isOpen && task) {
+      setPrInput(task.githubPrUrl || (task.prNumber ? String(task.prNumber) : ''));
+      setResult(task.integrityCheck || null);
+      setErrorMessage('');
+    }
+  }, [isOpen, task]);
 
   if (!isOpen || !task) return null;
 
@@ -63,8 +71,8 @@ export const CheckPrModal: React.FC<CheckPrModalProps> = ({
       }
 
       setResult(data.result);
-      if (prNumber && prUrl) {
-        onPrChecked(task.id, prUrl, prNumber, data.result);
+      if (data.task) {
+        onPrChecked(task.id, data.task);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Terjadi kesalahan sistem saat memeriksa PR.');

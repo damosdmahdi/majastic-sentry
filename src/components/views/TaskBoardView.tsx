@@ -13,7 +13,9 @@ import {
   ShieldAlert, 
   Archive,
   ExternalLink,
-  Lock
+  Lock,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 interface TaskBoardViewProps {
@@ -23,6 +25,8 @@ interface TaskBoardViewProps {
   currentUser: User;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus, blockerNote?: string) => void;
   onOpenAddTaskModal: () => void;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (taskId: string) => void;
   onOpenBlockerModal: (task: Task) => void;
   onOpenCheckPrModal: (task: Task) => void;
   onArchiveCompletedTasks: () => void;
@@ -35,6 +39,8 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   currentUser,
   onUpdateTaskStatus,
   onOpenAddTaskModal,
+  onEditTask,
+  onDeleteTask,
   onOpenBlockerModal,
   onOpenCheckPrModal,
   onArchiveCompletedTasks,
@@ -42,6 +48,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   const [onlyMyTasks, setOnlyMyTasks] = useState(false);
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>('ALL');
   const [isConfirmArchiveOpen, setIsConfirmArchiveOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [mentorOnlyNotice, setMentorOnlyNotice] = useState<string | null>(null);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -163,7 +170,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
-          {doneCount > 0 && (
+          {doneCount > 0 && currentUser.role === 'MENTOR' && (
             <button
               onClick={() => setIsConfirmArchiveOpen(true)}
               title="Arsipkan tugas selesai setelah diekspor ke Obsidian"
@@ -237,18 +244,41 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                             : 'border-slate-200/80'
                         }`}
                       >
-                        {/* Use Case Reference Tag */}
-                        {useCase ? (
-                          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                            <span>{useCase.code}</span>
-                            <span>•</span>
-                            <span className="truncate max-w-[140px]">{useCase.title}</span>
+                        {/* Use Case Reference Tag + Card Actions */}
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          {useCase ? (
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1 min-w-0">
+                              <span className="shrink-0">{useCase.code}</span>
+                              <span className="shrink-0">•</span>
+                              <span className="truncate max-w-[130px]">{useCase.title}</span>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
+                              <span>Tugas Umum</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-0.5 shrink-0 -mt-0.5 -mr-1">
+                            <button
+                              type="button"
+                              onClick={() => onEditTask(task)}
+                              title="Edit tugas"
+                              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            {currentUser.role === 'MENTOR' && (
+                              <button
+                                type="button"
+                                onClick={() => setTaskToDelete(task)}
+                                title="Hapus tugas"
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
-                        ) : (
-                          <div className="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                            <span>Tugas Umum</span>
-                          </div>
-                        )}
+                        </div>
 
                         {/* Title */}
                         <h4 className="font-semibold text-xs text-slate-900 leading-snug mb-2">
@@ -318,6 +348,16 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
                                   <span>Guardrail OK</span>
                                 </span>
+                              )}
+
+                              {task.integrityCheck?.status === 'FAILED' && (
+                                <button
+                                  onClick={() => onOpenCheckPrModal(task)}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-700 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded hover:bg-rose-200"
+                                >
+                                  <AlertOctagon className="w-3 h-3 text-rose-600" />
+                                  <span>PR Gagal</span>
+                                </button>
                               )}
                             </div>
                           ) : (
@@ -408,6 +448,40 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                 className="px-3.5 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs"
               >
                 Ya, Arsipkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Delete Task (Mentor Only) */}
+      {taskToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-xl border border-slate-200">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Hapus Tugas Ini?</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Tugas <strong>&ldquo;{taskToDelete.title}&rdquo;</strong> akan dihapus permanen dari papan dan database Supabase. Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setTaskToDelete(null)}
+                className="px-3.5 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  onDeleteTask(taskToDelete.id);
+                  setTaskToDelete(null);
+                }}
+                className="px-3.5 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs"
+              >
+                Ya, Hapus Permanen
               </button>
             </div>
           </div>

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { inspectPullRequest } from '@/lib/github-checker';
 import { db } from '@/lib/server-store';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAuth();
+    if (auth.error) return auth.error;
+
     const { taskId, repo, prNumber, prUrl } = await req.json();
 
     let targetPrNumber = prNumber;
@@ -47,16 +51,32 @@ export async function POST(req: Request) {
       protectedFiles,
     });
 
-    // If taskId is provided, update task with result
+    let updatedTask = null;
+
+    // If taskId is provided, update task in DB consistently with result
     if (taskId) {
-      await db.updateTask(taskId, {
-        githubPrUrl: prUrl || `https://github.com/${effectiveRepo}/pull/${targetPrNumber}`,
-        prNumber: targetPrNumber,
-        integrityCheck: result,
-      });
+      const existingTask = data.tasks.find((t) => t.id === taskId);
+      const resolvedPrUrl = prUrl || `https://github.com/${effectiveRepo}/pull/${targetPrNumber}`;
+
+      if (result.status === 'PASSED' || result.status === 'WARNING') {
+        updatedTask = await db.updateTask(taskId, {
+          githubPrUrl: resolvedPrUrl,
+          prNumber: targetPrNumber,
+          integrityCheck: result,
+          // Advance to REVIEW in DB unless already DONE
+          status: existingTask?.status === 'DONE' ? 'DONE' : 'REVIEW',
+        });
+      } else if (result.violatedFiles.length > 0) {
+        // Real PR contains forbidden sensitive files (.env / node_modules): link PR & record FAILED badge, do NOT advance to REVIEW
+        updatedTask = await db.updateTask(taskId, {
+          githubPrUrl: resolvedPrUrl,
+          prNumber: targetPrNumber,
+          integrityCheck: result,
+        });
+      }
     }
 
-    return NextResponse.json({ success: true, result });
+    return NextResponse.json({ success: true, result, task: updatedTask });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

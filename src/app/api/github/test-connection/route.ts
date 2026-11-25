@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/server-store';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAuth();
+    if (auth.error) return auth.error;
+
     const body = await req.json().catch(() => ({}));
     const data = await db.getAll();
     const project = data.projects[0];

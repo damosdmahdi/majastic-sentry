@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, AlertOctagon, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, AlertOctagon } from 'lucide-react';
 import { Task } from '@/types';
 
 interface BlockerModalProps {
@@ -18,6 +18,12 @@ export const BlockerModal: React.FC<BlockerModalProps> = ({
   onSubmitBlocker,
 }) => {
   const [note, setNote] = useState(task?.blockerNote || '');
+
+  useEffect(() => {
+    if (isOpen && task) {
+      setNote(task.blockerNote || '');
+    }
+  }, [isOpen, task]);
 
   if (!isOpen || !task) return null;
 

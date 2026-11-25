@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/server-store';
 import { generateObsidianWeeklyMarkdown } from '@/lib/obsidian-exporter';
-import { cookies } from 'next/headers';
+import { requireMentor } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  // Enforce server-side role check: Mentor only
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('majastic_session');
-  if (!sessionCookie?.value) {
-    return NextResponse.json({ error: 'Unauthorized: Harap login terlebih dahulu' }, { status: 401 });
-  }
-
-  try {
-    const sessionUser = JSON.parse(sessionCookie.value);
-    if (sessionUser.role !== 'MENTOR') {
-      return NextResponse.json(
-        { error: 'Forbidden: Ekspor Obsidian hanya dapat diakses oleh Lead & Mentor' },
-        { status: 403 }
-      );
-    }
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized: Sesi tidak valid' }, { status: 401 });
-  }
+  // Enforce server-side signed session & role check: Mentor only
+  const auth = await requireMentor();
+  if (auth.error) return auth.error;
 
   const { searchParams } = new URL(req.url);
   const format = searchParams.get('format'); // 'json' or 'download'

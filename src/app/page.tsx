@@ -10,8 +10,7 @@ import {
   User, 
   TaskStatus, 
   TaskType, 
-  HttpMethod,
-  IntegrityCheckResult
+  HttpMethod
 } from '@/types';
 import {
   INITIAL_PROJECTS,
@@ -74,7 +73,9 @@ export default function HomePage() {
 
   // Modals state
   const [isAddUseCaseModalOpen, setIsAddUseCaseModalOpen] = useState(false);
+  const [editingUseCase, setEditingUseCase] = useState<UseCase | null>(null);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedUseCaseIdForTask, setSelectedUseCaseIdForTask] = useState<string>('');
   
   const [isCheckPrModalOpen, setIsCheckPrModalOpen] = useState(false);
@@ -91,6 +92,10 @@ export default function HomePage() {
     if (!isSilent) setIsSyncing(true);
     try {
       const res = await fetch('/api/data');
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setDbError(data.dbError || null);
@@ -106,12 +111,14 @@ export default function HomePage() {
     } finally {
       if (!isSilent) setIsSyncing(false);
     }
-  }, []);
+  }, [router]);
 
-  // Fetch initial data on mount
+  // Fetch initial data only after session verification passes
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!isAuthChecking) {
+      fetchData();
+    }
+  }, [isAuthChecking, fetchData]);
 
   // Enforce Mentor-only access for Obsidian tab
   useEffect(() => {
@@ -122,13 +129,14 @@ export default function HomePage() {
 
   // Auto-polling interval every 20 seconds if window is visible
   useEffect(() => {
+    if (isAuthChecking) return;
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchData(true);
       }
     }, 20000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [isAuthChecking, fetchData]);
 
   // Update Task Status
   const handleUpdateTaskStatus = async (taskId: string, newStatus: TaskStatus, blockerNote?: string) => {
@@ -171,19 +179,25 @@ export default function HomePage() {
     }
   };
 
-  // Add Use Case
-  const handleAddUseCase = async (useCaseData: {
-    milestoneId: string;
-    code: string;
-    title: string;
-    businessGoal: string;
-    figmaUrl?: string;
-  }) => {
+  // Add or Update Use Case
+  const handleSaveUseCase = async (
+    useCaseData: {
+      milestoneId: string;
+      code: string;
+      title: string;
+      businessGoal: string;
+      figmaUrl?: string;
+    },
+    editingUseCaseId?: string
+  ) => {
     try {
+      const isEdit = Boolean(editingUseCaseId);
       const res = await fetch('/api/use-cases', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(useCaseData),
+        body: JSON.stringify(
+          isEdit ? { id: editingUseCaseId, ...useCaseData } : useCaseData
+        ),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -191,27 +205,64 @@ export default function HomePage() {
         return;
       }
       if (data.useCase) {
-        setUseCases((prev) => [...prev, data.useCase]);
+        if (isEdit) {
+          setUseCases((prev) =>
+            prev.map((u) => (u.id === editingUseCaseId ? data.useCase : u))
+          );
+        } else {
+          setUseCases((prev) => [...prev, data.useCase]);
+        }
       }
     } catch (err: any) {
-      console.error('Failed to add use case:', err);
-      alert(`Terjadi kesalahan jaringan saat menambah Use Case: ${err.message}`);
+      console.error('Failed to save use case:', err);
+      alert(`Terjadi kesalahan jaringan saat menyimpan Use Case: ${err.message}`);
     }
   };
 
-  // Add Task
-  const handleAddTask = async (taskData: {
-    useCaseId?: string | null;
-    title: string;
-    type: TaskType;
-    endpointSpec?: { method: HttpMethod; route: string };
-    assigneeId: string;
-  }) => {
+  // Delete Use Case (Mentor Only)
+  const handleDeleteUseCase = async (useCaseId: string) => {
+    const previousUseCases = useCases;
+    const previousTasks = tasks;
+    setUseCases((prev) => prev.filter((u) => u.id !== useCaseId));
+    setTasks((prev) => prev.filter((t) => t.useCaseId !== useCaseId));
+
     try {
+      const res = await fetch(`/api/use-cases?id=${encodeURIComponent(useCaseId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setUseCases(previousUseCases);
+        setTasks(previousTasks);
+        alert(`Gagal menghapus Use Case: ${data.error || 'Terjadi kesalahan pada server'}`);
+      }
+    } catch (err: any) {
+      console.error('Failed to delete use case:', err);
+      setUseCases(previousUseCases);
+      setTasks(previousTasks);
+      alert(`Terjadi kesalahan jaringan saat menghapus Use Case: ${err.message}`);
+    }
+  };
+
+  // Add or Edit Task
+  const handleSaveTask = async (
+    taskData: {
+      useCaseId?: string | null;
+      title: string;
+      type: TaskType;
+      endpointSpec?: { method: HttpMethod; route: string };
+      assigneeId: string;
+    },
+    editingTaskId?: string
+  ) => {
+    try {
+      const isEdit = Boolean(editingTaskId);
       const res = await fetch('/api/tasks', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(
+          isEdit ? { id: editingTaskId, ...taskData } : taskData
+        ),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -219,11 +270,38 @@ export default function HomePage() {
         return;
       }
       if (data.task) {
-        setTasks((prev) => [...prev, data.task]);
+        if (isEdit) {
+          setTasks((prev) =>
+            prev.map((t) => (t.id === editingTaskId ? data.task : t))
+          );
+        } else {
+          setTasks((prev) => [...prev, data.task]);
+        }
       }
     } catch (err: any) {
-      console.error('Failed to add task:', err);
+      console.error('Failed to save task:', err);
       alert(`Terjadi kesalahan jaringan: ${err.message}`);
+    }
+  };
+
+  // Delete Task (Mentor Only)
+  const handleDeleteTask = async (taskId: string) => {
+    const previousTasks = tasks;
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+
+    try {
+      const res = await fetch(`/api/tasks?id=${encodeURIComponent(taskId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setTasks(previousTasks);
+        alert(`Gagal menghapus tugas: ${data.error || 'Terjadi kesalahan pada server'}`);
+      }
+    } catch (err: any) {
+      console.error('Failed to delete task:', err);
+      setTasks(previousTasks);
+      alert(`Terjadi kesalahan jaringan saat menghapus tugas: ${err.message}`);
     }
   };
 
@@ -252,33 +330,36 @@ export default function HomePage() {
     }
   };
 
-  // Update Protected Files
-  const handleUpdateProtectedFiles = (files: string[]) => {
+  // Update Protected Files (Persisted to Supabase)
+  const handleUpdateProtectedFiles = async (files: string[]) => {
+    const previousProjects = projects;
     setProjects((prev) =>
       prev.map((p) => (p.id === activeProject.id ? { ...p, protectedFiles: files } : p))
     );
+
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: activeProject.id, protectedFiles: files }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setProjects(previousProjects);
+        alert(`Gagal menyimpan daftar file terproteksi: ${data.error || 'Terjadi kesalahan pada server'}`);
+      }
+    } catch (err: any) {
+      console.error('Failed to update protected files:', err);
+      setProjects(previousProjects);
+      alert(`Terjadi kesalahan jaringan saat menyimpan file terproteksi: ${err.message}`);
+    }
   };
 
-  // PR Checked Callback
-  const handlePrChecked = (
-    taskId: string,
-    prUrl: string,
-    prNumber: number,
-    result: IntegrityCheckResult
-  ) => {
+  // PR Checked Callback (Uses exact server-updated task so UI never desyncs from DB)
+  const handlePrChecked = (taskId: string, updatedTask: Task | null) => {
+    if (!updatedTask) return;
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              githubPrUrl: prUrl,
-              prNumber,
-              status: 'REVIEW', // Automatically advance to Review after PR is verified!
-              integrityCheck: result,
-              lastUpdatedAt: new Date().toISOString(),
-            }
-          : t
-      )
+      prev.map((t) => (t.id === taskId ? updatedTask : t))
     );
   };
 
@@ -345,9 +426,16 @@ export default function HomePage() {
             currentUser={currentUser}
             onUpdateTaskStatus={handleUpdateTaskStatus}
             onOpenAddTaskModal={() => {
+              setEditingTask(null);
               setSelectedUseCaseIdForTask('');
               setIsAddTaskModalOpen(true);
             }}
+            onEditTask={(task) => {
+              setEditingTask(task);
+              setSelectedUseCaseIdForTask(task.useCaseId || '');
+              setIsAddTaskModalOpen(true);
+            }}
+            onDeleteTask={handleDeleteTask}
             onOpenBlockerModal={(task) => {
               setSelectedTaskForBlocker(task);
               setIsBlockerModalOpen(true);
@@ -365,8 +453,18 @@ export default function HomePage() {
             useCases={useCases}
             tasks={tasks}
             users={users}
-            onOpenAddUseCaseModal={() => setIsAddUseCaseModalOpen(true)}
+            isMentor={currentUser.role === 'MENTOR'}
+            onOpenAddUseCaseModal={() => {
+              setEditingUseCase(null);
+              setIsAddUseCaseModalOpen(true);
+            }}
+            onEditUseCase={(uc) => {
+              setEditingUseCase(uc);
+              setIsAddUseCaseModalOpen(true);
+            }}
+            onDeleteUseCase={handleDeleteUseCase}
             onOpenAddTaskModal={(ucId) => {
+              setEditingTask(null);
               setSelectedUseCaseIdForTask(ucId);
               setIsAddTaskModalOpen(true);
             }}
@@ -376,6 +474,7 @@ export default function HomePage() {
         {currentTab === 'guardrail' && (
           <GuardrailView
             project={activeProject}
+            isMentor={currentUser.role === 'MENTOR'}
             onUpdateProtectedFiles={handleUpdateProtectedFiles}
           />
         )}
@@ -395,18 +494,26 @@ export default function HomePage() {
       {/* Modals */}
       <AddUseCaseModal
         isOpen={isAddUseCaseModalOpen}
-        onClose={() => setIsAddUseCaseModalOpen(false)}
+        onClose={() => {
+          setIsAddUseCaseModalOpen(false);
+          setEditingUseCase(null);
+        }}
         milestoneId={activeMilestone.id}
-        onAddUseCase={handleAddUseCase}
+        editingUseCase={editingUseCase}
+        onAddUseCase={handleSaveUseCase}
       />
 
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
-        onClose={() => setIsAddTaskModalOpen(false)}
+        onClose={() => {
+          setIsAddTaskModalOpen(false);
+          setEditingTask(null);
+        }}
         useCases={useCases}
         initialUseCaseId={selectedUseCaseIdForTask || undefined}
+        editingTask={editingTask}
         users={users}
-        onAddTask={handleAddTask}
+        onAddTask={handleSaveTask}
       />
 
       <CheckPrModal

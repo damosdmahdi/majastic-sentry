@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Code2, Palette, ListTodo, UserCheck, Target, Search, Check, ChevronDown } from 'lucide-react';
-import { TaskType, HttpMethod, User, UseCase } from '@/types';
+import { Task, TaskType, HttpMethod, User, UseCase } from '@/types';
 
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   useCases: UseCase[];
   initialUseCaseId?: string;
+  editingTask?: Task | null;
   users: User[];
   onAddTask: (taskData: {
     useCaseId?: string | null;
@@ -16,7 +17,7 @@ interface AddTaskModalProps {
     type: TaskType;
     endpointSpec?: { method: HttpMethod; route: string };
     assigneeId: string;
-  }) => void;
+  }, editingTaskId?: string) => void;
 }
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({
@@ -24,6 +25,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onClose,
   useCases,
   initialUseCaseId,
+  editingTask,
   users,
   onAddTask,
 }) => {
@@ -38,12 +40,25 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [assigneeId, setAssigneeId] = useState(users[1]?.id || users[0]?.id || '');
 
   useEffect(() => {
-    if (initialUseCaseId) {
-      setSelectedUseCaseId(initialUseCaseId);
+    if (!isOpen) return;
+    setSearchQuery('');
+    setIsPickerOpen(false);
+    if (editingTask) {
+      setSelectedUseCaseId(editingTask.useCaseId || null);
+      setTitle(editingTask.title);
+      setType(editingTask.type);
+      setMethod(editingTask.endpointSpec?.method || 'POST');
+      setRoute(editingTask.endpointSpec?.route || '/');
+      setAssigneeId(editingTask.assigneeId || users[1]?.id || users[0]?.id || '');
     } else {
-      setSelectedUseCaseId(null);
+      setSelectedUseCaseId(initialUseCaseId || null);
+      setTitle('');
+      setType('ENDPOINT');
+      setMethod('POST');
+      setRoute('/');
+      setAssigneeId(users[1]?.id || users[0]?.id || '');
     }
-  }, [initialUseCaseId, isOpen]);
+  }, [editingTask, initialUseCaseId, isOpen, users]);
 
   // Filter Use Cases based on search query (code or title)
   const filteredUseCases = useMemo(() => {
@@ -65,13 +80,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     e.preventDefault();
     if (!title.trim() || !assigneeId) return;
 
-    onAddTask({
-      useCaseId: selectedUseCaseId || undefined,
-      title: title.trim(),
-      type,
-      endpointSpec: type === 'ENDPOINT' ? { method, route: route.trim() } : undefined,
-      assigneeId,
-    });
+    onAddTask(
+      {
+        useCaseId: selectedUseCaseId || null,
+        title: title.trim(),
+        type,
+        endpointSpec: type === 'ENDPOINT' ? { method, route: route.trim() } : undefined,
+        assigneeId,
+      },
+      editingTask?.id
+    );
 
     setTitle('');
     setType('ENDPOINT');
@@ -92,7 +110,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <ListTodo className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-900 text-sm">Tambah Tugas Baru</h2>
+              <h2 className="font-bold text-slate-900 text-sm">
+                {editingTask ? 'Edit Tugas' : 'Tambah Tugas Baru'}
+              </h2>
               <p className="text-[11px] sm:text-xs text-slate-500">Tentukan Use Case, spesifikasi endpoint atau halaman slicing</p>
             </div>
           </div>
@@ -359,10 +379,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!title.trim() || useCases.length === 0}
+              disabled={!title.trim() || !assigneeId}
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors shadow-sm"
             >
-              Tambahkan Tugas
+              {editingTask ? 'Simpan Perubahan' : 'Tambahkan Tugas'}
             </button>
           </div>
 

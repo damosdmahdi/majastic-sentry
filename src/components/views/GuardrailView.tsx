@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Project, IntegrityCheckResult } from '@/types';
 import { 
   ShieldAlert, 
@@ -12,17 +12,18 @@ import {
   Key, 
   Loader2,
   CheckCircle2,
-  Activity,
-  Lock
+  Activity
 } from 'lucide-react';
 
 interface GuardrailViewProps {
   project: Project;
+  isMentor: boolean;
   onUpdateProtectedFiles: (files: string[]) => void;
 }
 
 export const GuardrailView: React.FC<GuardrailViewProps> = ({
   project,
+  isMentor,
   onUpdateProtectedFiles,
 }) => {
   const [prInput, setPrInput] = useState('');
@@ -32,6 +33,10 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
 
   const [files, setFiles] = useState<string[]>(project.protectedFiles || []);
   const [newFile, setNewFile] = useState('');
+
+  useEffect(() => {
+    setFiles(project.protectedFiles || []);
+  }, [project.protectedFiles]);
 
   // GitHub Connectivity Test State
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -313,23 +318,25 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
           </p>
         </div>
 
-        {/* Add File Form */}
-        <form onSubmit={handleAddFile} className="flex gap-2">
-          <input
-            type="text"
-            value={newFile}
-            onChange={(e) => setNewFile(e.target.value)}
-            placeholder="Tambah file (misal: docker-compose.yml atau vite.config.ts)..."
-            className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-slate-900 focus:bg-white"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm inline-flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Tambah</span>
-          </button>
-        </form>
+        {/* Add File Form (Mentor Only) */}
+        {isMentor && (
+          <form onSubmit={handleAddFile} className="flex gap-2">
+            <input
+              type="text"
+              value={newFile}
+              onChange={(e) => setNewFile(e.target.value)}
+              placeholder="Tambah file (misal: docker-compose.yml atau vite.config.ts)..."
+              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-slate-900 focus:bg-white"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm inline-flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tambah</span>
+            </button>
+          </form>
+        )}
 
         {/* Files Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
@@ -339,13 +346,15 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
               className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800"
             >
               <span className="truncate">{file}</span>
-              <button
-                onClick={() => handleRemoveFile(file)}
-                className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
-                title="Hapus proteksi"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {isMentor && (
+                <button
+                  onClick={() => handleRemoveFile(file)}
+                  className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
+                  title="Hapus proteksi"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           ))}
         </div>

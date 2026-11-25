@@ -1,20 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { UseCase, Task, User } from '@/types';
 import { 
   Palette, 
   ExternalLink, 
   Plus, 
   CheckCircle2, 
-  Archive
+  Archive,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 interface UseCaseViewProps {
   useCases: UseCase[];
   tasks: Task[]; // Receives all tasks (including historical/archived ones)
   users: User[];
+  isMentor: boolean;
   onOpenAddUseCaseModal: () => void;
+  onEditUseCase: (useCase: UseCase) => void;
+  onDeleteUseCase: (useCaseId: string) => void;
   onOpenAddTaskModal: (useCaseId: string) => void;
 }
 
@@ -22,10 +27,14 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
   useCases,
   tasks,
   users,
+  isMentor,
   onOpenAddUseCaseModal,
+  onEditUseCase,
+  onDeleteUseCase,
   onOpenAddTaskModal,
 }) => {
   const userMap = new Map(users.map((u) => [u.id, u]));
+  const [ucToDelete, setUcToDelete] = useState<UseCase | null>(null);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -99,21 +108,43 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
                   </div>
                 </div>
 
-                {/* Figma Design Link */}
-                {uc.figmaUrl ? (
-                  <a
-                    href={uc.figmaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-medium transition-colors self-start"
+                {/* Figma Design Link & Actions */}
+                <div className="flex items-center gap-2 self-start flex-wrap">
+                  {uc.figmaUrl ? (
+                    <a
+                      href={uc.figmaUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-medium transition-colors"
+                    >
+                      <Palette className="w-3.5 h-3.5" />
+                      <span>Buka Frame Figma</span>
+                      <ExternalLink className="w-3 h-3 text-purple-400" />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">Desain Figma belum ditautkan</span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => onEditUseCase(uc)}
+                    title="Edit Use Case / Tautan Figma"
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-transparent hover:border-slate-200 transition-colors"
                   >
-                    <Palette className="w-3.5 h-3.5" />
-                    <span>Buka Frame Figma</span>
-                    <ExternalLink className="w-3 h-3 text-purple-400" />
-                  </a>
-                ) : (
-                  <span className="text-xs text-slate-400 italic">Desain Figma belum ditautkan</span>
-                )}
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+
+                  {isMentor && (
+                    <button
+                      type="button"
+                      onClick={() => setUcToDelete(uc)}
+                      title="Hapus Use Case"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-200 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Business Goal Box */}
@@ -157,8 +188,10 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
                             <span className="font-mono text-[10px] text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">
                               <span className="font-bold text-sky-700">{t.endpointSpec.method}</span> {t.endpointSpec.route}
                             </span>
-                          ) : (
+                          ) : t.type === 'UI_SLICING' ? (
                             <span className="text-[10px] text-indigo-700 font-medium">UI Slicing</span>
+                          ) : (
+                            <span className="text-[10px] text-slate-600 font-medium">Tugas Umum</span>
                           )}
                         </div>
                         <div className="text-right">
@@ -179,6 +212,40 @@ export const UseCaseView: React.FC<UseCaseViewProps> = ({
           );
         }))}
       </div>
+
+      {/* Confirmation Modal: Delete Use Case (Mentor Only) */}
+      {ucToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-xl border border-slate-200">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Hapus Use Case {ucToDelete.code}?</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Use Case <strong>&ldquo;{ucToDelete.title}&rdquo;</strong> (beserta tugas yang terikat padanya) akan dihapus permanen dari database Supabase.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setUcToDelete(null)}
+                className="px-3.5 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  onDeleteUseCase(ucToDelete.id);
+                  setUcToDelete(null);
+                }}
+                className="px-3.5 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs"
+              >
+                Ya, Hapus Permanen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

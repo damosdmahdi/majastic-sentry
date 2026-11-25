@@ -1,25 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Target, Palette } from 'lucide-react';
+import { UseCase } from '@/types';
 
 interface AddUseCaseModalProps {
   isOpen: boolean;
   onClose: () => void;
   milestoneId: string;
-  onAddUseCase: (useCaseData: {
-    milestoneId: string;
-    code: string;
-    title: string;
-    businessGoal: string;
-    figmaUrl?: string;
-  }) => void;
+  editingUseCase?: UseCase | null;
+  onAddUseCase: (
+    useCaseData: {
+      milestoneId: string;
+      code: string;
+      title: string;
+      businessGoal: string;
+      figmaUrl?: string;
+    },
+    editingUseCaseId?: string
+  ) => void;
 }
 
 export const AddUseCaseModal: React.FC<AddUseCaseModalProps> = ({
   isOpen,
   onClose,
   milestoneId,
+  editingUseCase,
   onAddUseCase,
 }) => {
   const [code, setCode] = useState('');
@@ -27,19 +33,37 @@ export const AddUseCaseModal: React.FC<AddUseCaseModalProps> = ({
   const [businessGoal, setBusinessGoal] = useState('');
   const [figmaUrl, setFigmaUrl] = useState('');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    if (editingUseCase) {
+      setCode(editingUseCase.code);
+      setTitle(editingUseCase.title);
+      setBusinessGoal(editingUseCase.businessGoal);
+      setFigmaUrl(editingUseCase.figmaUrl || '');
+    } else {
+      setCode('');
+      setTitle('');
+      setBusinessGoal('');
+      setFigmaUrl('');
+    }
+  }, [editingUseCase, isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !businessGoal.trim()) return;
 
-    onAddUseCase({
-      milestoneId,
-      code: code.trim(),
-      title: title.trim(),
-      businessGoal: businessGoal.trim(),
-      figmaUrl: figmaUrl.trim() || undefined,
-    });
+    onAddUseCase(
+      {
+        milestoneId: editingUseCase?.milestoneId || milestoneId,
+        code: code.trim(),
+        title: title.trim(),
+        businessGoal: businessGoal.trim(),
+        figmaUrl: figmaUrl.trim() || undefined,
+      },
+      editingUseCase?.id
+    );
 
     setCode('');
     setTitle('');
@@ -59,7 +83,9 @@ export const AddUseCaseModal: React.FC<AddUseCaseModalProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-900 text-sm">Tambah Use Case Baru</h2>
+              <h2 className="font-bold text-slate-900 text-sm">
+                {editingUseCase ? 'Edit Use Case' : 'Tambah Use Case Baru'}
+              </h2>
               <p className="text-[11px] sm:text-xs text-slate-500">Penyelarasan kebutuhan bisnis, UI, dan modul koding</p>
             </div>
           </div>
@@ -143,7 +169,7 @@ export const AddUseCaseModal: React.FC<AddUseCaseModalProps> = ({
               type="submit"
               className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
             >
-              Simpan Use Case
+              {editingUseCase ? 'Simpan Perubahan' : 'Simpan Use Case'}
             </button>
           </div>
 

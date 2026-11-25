@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/server-store';
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE_NAME, SessionUser, signSessionCookie } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,25 +50,9 @@ export async function POST(req: Request) {
 
     const activeEmail = (user.role === 'MENTOR' && customMentorEmail) ? customMentorEmail : user.email;
 
-    // Set Session Cookie (30 days)
+    // Set Signed Session Cookie (30 days)
     const cookieStore = await cookies();
-    const sessionData = JSON.stringify({
-      id: user.id,
-      name: user.name,
-      email: activeEmail,
-      role: user.role,
-      avatar: user.avatar,
-      tag: user.tag,
-    });
-
-    cookieStore.set('majastic_session', sessionData, {
-      path: '/',
-      httpOnly: false, // Accessible on client so UI knows logged-in user
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    });
-
-    const safeUser = {
+    const safeUser: SessionUser = {
       id: user.id,
       name: user.name,
       email: activeEmail,
@@ -75,6 +60,17 @@ export async function POST(req: Request) {
       avatar: user.avatar,
       tag: user.tag,
     };
+
+    const signedToken = signSessionCookie(safeUser);
+
+    cookieStore.set(SESSION_COOKIE_NAME, signedToken, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
+
     return NextResponse.json({ success: true, user: safeUser });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

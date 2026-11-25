@@ -180,41 +180,53 @@ export const db = {
           status: m.status,
         }));
 
-        const rawUseCases = (ucRes.data || []).map((uc: any) => ({
-          id: uc.id,
-          milestoneId: uc.milestone_id,
-          code: uc.code,
-          title: uc.title,
-          businessGoal: uc.business_goal,
-          figmaUrl: uc.figma_url,
-          createdAt: uc.created_at,
-        }));
+        const ucOrderMap = new Map(INITIAL_USE_CASES.map((u, idx) => [u.id, idx]));
+        const rawUseCases = (ucRes.data || [])
+          .map((uc: any) => ({
+            id: uc.id,
+            milestoneId: uc.milestone_id,
+            code: uc.code,
+            title: uc.title,
+            businessGoal: uc.business_goal,
+            figmaUrl: uc.figma_url,
+            createdAt: uc.created_at,
+          }))
+          .sort((a: UseCase, b: UseCase) => {
+            const idxA = ucOrderMap.get(a.id);
+            const idxB = ucOrderMap.get(b.id);
+            if (idxA !== undefined && idxB !== undefined) return idxA - idxB;
+            if (idxA !== undefined) return -1;
+            if (idxB !== undefined) return 1;
+            return a.code.localeCompare(b.code, undefined, { numeric: true });
+          });
 
-        const rawTasks = (tasksRes.data || []).map((t: any) => ({
-          id: t.id,
-          useCaseId: t.use_case_id,
-          title: t.title,
-          type: t.type,
-          endpointSpec: t.endpoint_spec,
-          assigneeId: t.assignee_id,
-          status: t.status,
-          blockerNote: t.blocker_note,
-          githubPrUrl: t.github_pr_url,
-          prNumber: t.pr_number,
-          integrityCheck: t.integrity_check,
-          isArchived: Boolean(t.is_archived),
-          lastUpdatedAt: t.last_updated_at,
-          reviewedAt: t.reviewed_at,
-          createdAt: t.created_at,
-        }));
+        const rawTasks = (tasksRes.data || [])
+          .map((t: any) => ({
+            id: t.id,
+            useCaseId: t.use_case_id,
+            title: t.title,
+            type: t.type,
+            endpointSpec: t.endpoint_spec,
+            assigneeId: t.assignee_id,
+            status: t.status,
+            blockerNote: t.blocker_note,
+            githubPrUrl: t.github_pr_url,
+            prNumber: t.pr_number,
+            integrityCheck: t.integrity_check,
+            isArchived: Boolean(t.is_archived),
+            lastUpdatedAt: t.last_updated_at,
+            reviewedAt: t.reviewed_at,
+            createdAt: t.created_at,
+          }))
+          .sort((a: Task, b: Task) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
         return {
           source: 'supabase' as const,
           error: null,
           users: rawUsers.length > 0 ? rawUsers : INITIAL_USERS,
           projects: rawProjects.length > 0 ? rawProjects : INITIAL_PROJECTS,
-          milestones: rawMilestones.length >= INITIAL_MILESTONES.length ? rawMilestones : INITIAL_MILESTONES,
-          useCases: rawUseCases.length >= INITIAL_USE_CASES.length ? rawUseCases : INITIAL_USE_CASES,
+          milestones: rawMilestones.length > 0 ? rawMilestones : INITIAL_MILESTONES,
+          useCases: rawUseCases.length > 0 ? rawUseCases : INITIAL_USE_CASES,
           tasks: rawTasks,
         };
       } catch (err: any) {
@@ -281,6 +293,67 @@ export const db = {
   },
 
   // ==========================================
+  // UPDATE USE CASE
+  // ==========================================
+  async updateUseCase(useCaseId: string, patch: Partial<UseCase>) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const updatePayload: any = {};
+      if (patch.code !== undefined) updatePayload.code = patch.code;
+      if (patch.title !== undefined) updatePayload.title = patch.title;
+      if (patch.businessGoal !== undefined) updatePayload.business_goal = patch.businessGoal;
+      if (patch.figmaUrl !== undefined) updatePayload.figma_url = patch.figmaUrl || null;
+
+      const { data, error } = await supabase
+        .from('use_cases')
+        .update(updatePayload)
+        .eq('id', useCaseId)
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.error('Supabase updateUseCase error:', error);
+        throw new Error(`Gagal memperbarui Use Case di Supabase: ${error.message}`);
+      }
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        milestoneId: data.milestone_id,
+        code: data.code,
+        title: data.title,
+        businessGoal: data.business_goal,
+        figmaUrl: data.figma_url,
+        createdAt: data.created_at,
+      } as UseCase;
+    }
+
+    const store = getLocalStore();
+    const index = store.useCases.findIndex((u) => u.id === useCaseId);
+    if (index === -1) return null;
+    store.useCases[index] = { ...store.useCases[index], ...patch };
+    return store.useCases[index];
+  },
+
+  // ==========================================
+  // DELETE USE CASE
+  // ==========================================
+  async deleteUseCase(useCaseId: string) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const { error } = await supabase.from('use_cases').delete().eq('id', useCaseId);
+      if (error) {
+        console.error('Supabase deleteUseCase error:', error);
+        throw new Error(`Gagal menghapus Use Case dari Supabase: ${error.message}`);
+      }
+    }
+
+    const store = getLocalStore();
+    store.useCases = store.useCases.filter((u) => u.id !== useCaseId);
+    return true;
+  },
+
+  // ==========================================
   // ADD TASK
   // ==========================================
   async addTask(task: Task) {
@@ -320,15 +393,35 @@ export const db = {
   // ==========================================
   // UPDATE TASK
   // ==========================================
-  async updateTask(taskId: string, patch: Partial<Task>) {
+  async updateTask(taskId: string, patch: Partial<Task> & { clearBlockerNote?: boolean }) {
     const nowIso = new Date().toISOString();
     const supabase = getSupabaseClient();
     if (supabase) {
+      if (patch.useCaseId) {
+        await ensureUseCaseInSupabase(supabase, patch.useCaseId);
+      }
+
       const updatePayload: any = {
         last_updated_at: nowIso,
       };
-      if (patch.status) updatePayload.status = patch.status;
+      if (patch.title !== undefined) updatePayload.title = patch.title;
+      if (patch.useCaseId !== undefined) updatePayload.use_case_id = patch.useCaseId || null;
+      if (patch.type !== undefined) {
+        updatePayload.type = patch.type;
+        if (patch.type !== 'ENDPOINT') {
+          updatePayload.endpoint_spec = null;
+        }
+      }
+      if (patch.endpointSpec !== undefined) updatePayload.endpoint_spec = patch.endpointSpec;
+      if (patch.assigneeId !== undefined) updatePayload.assignee_id = patch.assigneeId;
+      if (patch.status) {
+        updatePayload.status = patch.status;
+        if (patch.status !== 'BLOCKED') {
+          updatePayload.blocker_note = null;
+        }
+      }
       if (patch.blockerNote !== undefined) updatePayload.blocker_note = patch.blockerNote;
+      if (patch.clearBlockerNote) updatePayload.blocker_note = null;
       if (patch.githubPrUrl !== undefined) updatePayload.github_pr_url = patch.githubPrUrl;
       if (patch.prNumber !== undefined) updatePayload.pr_number = patch.prNumber;
       if (patch.integrityCheck !== undefined) updatePayload.integrity_check = patch.integrityCheck;
@@ -379,6 +472,24 @@ export const db = {
       lastUpdatedAt: nowIso,
     };
     return store.tasks[index];
+  },
+
+  // ==========================================
+  // DELETE TASK
+  // ==========================================
+  async deleteTask(taskId: string) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+      if (error) {
+        console.error('Supabase deleteTask error:', error);
+        throw new Error(`Gagal menghapus Tugas dari Supabase: ${error.message}`);
+      }
+    }
+
+    const store = getLocalStore();
+    store.tasks = store.tasks.filter((t) => t.id !== taskId);
+    return true;
   },
 
   // ==========================================
