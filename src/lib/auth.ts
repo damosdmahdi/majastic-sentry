@@ -87,7 +87,7 @@ export async function requireMentor(): Promise<
   if (auth.user.role !== 'MENTOR') {
     return {
       error: NextResponse.json(
-        { error: 'Forbidden: Tindakan ini hanya diizinkan untuk Mentor (Lead & PM).' },
+        { error: 'Forbidden: Tindakan ini hanya diizinkan untuk Project Manager (PM).' },
         { status: 403 }
       ),
     };

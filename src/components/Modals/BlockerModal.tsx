@@ -48,7 +48,7 @@ export const BlockerModal: React.FC<BlockerModalProps> = ({
             </div>
             <div>
               <h2 className="font-bold text-rose-950 text-sm">Laporkan Kendala (Blocker)</h2>
-              <p className="text-[11px] sm:text-xs text-rose-600">Mentor akan langsung menerima notifikasi bantuan ini</p>
+              <p className="text-[11px] sm:text-xs text-rose-600">Project Manager (PM) akan langsung menerima notifikasi bantuan ini</p>
             </div>
           </div>
           <button

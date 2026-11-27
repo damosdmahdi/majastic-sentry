@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Majastic Sentry | Task & Mentoring Control Center',
+  title: 'Majastic Sentry | Task & PM Control Center',
   description: 'Platform manajemen tugas & guardrail arsitektur untuk tim developer dan siswa SMK Majastic, terhubung langsung ke Obsidian.',
 };
 

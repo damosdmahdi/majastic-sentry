@@ -69,7 +69,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
   const handleStatusChange = (task: Task, newStatus: TaskStatus) => {
     // Rule 1: Only Mentor can approve to DONE
     if (newStatus === 'DONE' && currentUser.role !== 'MENTOR') {
-      setMentorOnlyNotice('Otorisasi Ditolak: Hanya Mentor (Lead) yang dapat menyetujui tugas selesai (Done). Silakan ajukan ke "Review Mentor" terlebih dahulu.');
+      setMentorOnlyNotice('Otorisasi Ditolak: Hanya Project Manager (PM) yang dapat menyetujui tugas selesai (Done). Silakan ajukan ke "Butuh Review PM" terlebih dahulu.');
       setTimeout(() => setMentorOnlyNotice(null), 4000);
       return;
     }
@@ -105,7 +105,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
     },
     {
       id: 'REVIEW',
-      title: 'Butuh Review Mentor',
+      title: 'Butuh Review PM',
       count: displayedTasks.filter((t) => t.status === 'REVIEW').length,
       color: 'bg-amber-100 text-amber-800',
     },
@@ -403,7 +403,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
                             <option value="BLOCKED">🚨 Blocked</option>
                             <option value="REVIEW">Review</option>
                             <option value="DONE" disabled={currentUser.role !== 'MENTOR'}>
-                              {currentUser.role === 'MENTOR' ? '✅ Done' : '🔒 Done (Mentor)'}
+                              {currentUser.role === 'MENTOR' ? '✅ Done' : '🔒 Done (PM)'}
                             </option>
                           </select>
 

@@ -21,7 +21,7 @@ export const ObsidianView: React.FC<ObsidianViewProps> = ({
   const [copiedMd, setCopiedMd] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  const aiPrompt = `Bertindaklah sebagai Senior Engineering Mentor & Project Advisor.
+  const aiPrompt = `Bertindaklah sebagai Senior Project Manager (PM) & Engineering Lead.
 Analisis data rekap sprint mingguan di atas:
 1. Berikan evaluasi objektif untuk masing-masing developer (Junior Fullstack, Anak SMK, dan UI/FE).
 2. Temukan akar masalah dari blocker dan tugas yang menggantung (stale tasks).

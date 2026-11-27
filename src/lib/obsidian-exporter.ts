@@ -52,7 +52,7 @@ tags:
   - daily-sprint
 ---
 
-# 📊 Laporan Progres & Evaluasi Mentoring (${dateIso})
+# 📊 Laporan Progres & Evaluasi Project (${dateIso})
 **Proyek:** [[${project.name}]] | **Repositori:** \`${project.githubRepo}\`  
 **Milestone:** ${milestone.title}  
 **Waktu Penarikan:** ${dateFormatted} (${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})
@@ -63,10 +63,10 @@ tags:
 | Kategori | Jumlah | Keterangan |
 | :--- | :--- | :--- |
 | **Total Tugas Aktif** | ${totalTasks} | Tersebar di ${useCases.length} Use Case |
-| **Selesai (Done)** | ${doneTasks.length} (${Math.round((doneTasks.length / (totalTasks || 1)) * 100)}%) | Disetujui mentor |
-| **Menunggu Review Mentor** | ${reviewTasks.length} | PR siap diuji |
+| **Selesai (Done)** | ${doneTasks.length} (${Math.round((doneTasks.length / (totalTasks || 1)) * 100)}%) | Disetujui PM |
+| **Menunggu Review PM** | ${reviewTasks.length} | PR siap diuji |
 | **Dalam Pengerjaan** | ${inProgressTasks.length} | Sedang dikerjakan tim |
-| **Terkendala (Blocked)** | ${blockedTasks.length} | Memerlukan intervensi mentor |
+| **Terkendala (Blocked)** | ${blockedTasks.length} | Memerlukan intervensi PM |
 | **Stale Tasks (>48 jam)** | ${staleTasks.length} | Potensi silent blocker pada junior |
 | **Peringatan AI-Diff/Guardrail** | ${guardrailAlerts.length} | Perubahan tidak sengaja pada file config |
 
@@ -172,7 +172,7 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
 
   md += `---
 
-## 🚨 Catatan Kritis Mentor
+## 🚨 Catatan Kritis Project Manager
 
 ### 1. Daftar Kendala (Blockers) Aktif Saat Ini
 `;
@@ -219,7 +219,7 @@ ${uc.figmaUrl ? `* **Desain Figma:** [Buka Desain di Figma](${uc.figmaUrl})\n` :
 
 > [!TIP] Jalankan prompt di bawah ini bersama AI di Obsidian untuk menganalisis data penarikan (${dateIso}):
 \`\`\`markdown
-Bertindaklah sebagai Senior Engineering Mentor & Project Advisor.
+Bertindaklah sebagai Senior Project Manager (PM) & Engineering Lead.
 Analisis data rekapitulasi tim di atas (Penarikan: ${dateIso}):
 1. Berikan evaluasi objektif untuk masing-masing developer (Junior Fullstack, Anak SMK, dan UI/FE).
 2. Temukan akar masalah dari blocker dan tugas yang menggantung (stale tasks).

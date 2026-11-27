@@ -488,7 +488,7 @@ export default function HomePage() {
 
       {/* Subtle Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 px-6 text-center text-xs text-slate-400">
-        Majastic Sentry — Calm Workspace for Developers & Mentors
+        Majastic Sentry — Calm Workspace for Developers & Project Manager
       </footer>
 
       {/* Modals */}

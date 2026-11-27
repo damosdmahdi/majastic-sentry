@@ -314,7 +314,7 @@ export const GuardrailView: React.FC<GuardrailViewProps> = ({
         <div>
           <h3 className="font-bold text-sm text-slate-900">Daftar File yang Dilindungi (Protected Files)</h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            File di bawah ini tidak boleh diubah oleh anggota tim tanpa persetujuan langsung dari mentor.
+            File di bawah ini tidak boleh diubah oleh anggota tim tanpa persetujuan langsung dari Project Manager (PM).
           </p>
         </div>
 
