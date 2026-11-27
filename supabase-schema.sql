@@ -92,14 +92,18 @@ ALTER TABLE tasks ALTER COLUMN use_case_id DROP NOT NULL;
 INSERT INTO users (id, name, email, password, role, avatar, tag)
 VALUES
     ('user-mentor', 'Damos (You)', 'damos@majastic.internal', 'Adrigodri123', 'MENTOR', '👨‍🏫', 'Lead & PM'),
-    ('user-junior-1', 'Ari Pratama', 'ari@majastic.internal', 'majastic123', 'FULLSTACK', '👨‍💻', 'Junior Fullstack (Laravel)'),
-    ('user-smk-1', 'Budi Santoso', 'budi@majastic.internal', 'majastic123', 'FULLSTACK', '🎒', 'SMK Intern (Laravel/Inertia)'),
-    ('user-ui-1', 'Clara Putri', 'clara@majastic.internal', 'majastic123', 'UI_FE', '🎨', 'UI/FE Dev (Vue & Tailwind)'),
-    ('user-biz-1', 'Hendra Wijaya', 'hendra@majastic.internal', 'majastic123', 'BUSINESS', '📊', 'Product / Business')
+    ('user-junior-1', 'Hanan', 'hanan@majastic.tefa', 'majastic123', 'FULLSTACK', '👨‍💻', 'Fullstack (Laravel)'),
+    ('user-smk-1', 'Algifari', 'algifari@majastic.tefa', 'majastic123', 'FULLSTACK', '💻', 'Fullstack (Laravel/Inertia)'),
+    ('user-ui-1', 'Fardan', 'fardan@majastic.tefa', 'majastic123', 'UI_FE', '🎨', 'UI/FE Dev (Vue & Tailwind)')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
+    email = EXCLUDED.email,
     password = EXCLUDED.password,
+    role = EXCLUDED.role,
+    avatar = EXCLUDED.avatar,
     tag = EXCLUDED.tag;
+
+DELETE FROM users WHERE id = 'user-biz-1';
 
 -- ========================================================
 -- DATA SEED: PROJECT
