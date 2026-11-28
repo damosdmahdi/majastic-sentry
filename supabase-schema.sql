@@ -94,7 +94,9 @@ VALUES
     ('user-mentor', 'Damos (You)', 'damos@majastic.internal', 'Adrigodri123', 'MENTOR', '👨‍🏫', 'Lead & PM'),
     ('user-junior-1', 'Hanan', 'hanan@majastic.tefa', 'majastic123', 'FULLSTACK', '👨‍💻', 'Fullstack (Laravel)'),
     ('user-smk-1', 'Algifari', 'algifari@majastic.tefa', 'majastic123', 'FULLSTACK', '💻', 'Fullstack (Laravel/Inertia)'),
-    ('user-ui-1', 'Fardan', 'fardan@majastic.tefa', 'majastic123', 'UI_FE', '🎨', 'UI/FE Dev (Vue & Tailwind)')
+    ('user-ui-1', 'Fardan', 'fardan@majastic.tefa', 'majastic123', 'UI_FE', '🎨', 'UI/FE Dev (Vue & Tailwind)'),
+    ('user-ui-2', 'Febian', 'febian@majastic.internal', 'majastic123', 'UI_FE', '🎨', 'UI/UX Designer'),
+    ('user-biz-2', 'Nova', 'nova@majastic.internal', 'majastic123', 'BUSINESS', '📊', 'Product / Business')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     email = EXCLUDED.email,

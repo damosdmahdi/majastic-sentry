@@ -37,6 +37,24 @@ export const INITIAL_USERS: User[] = [
     avatar: '🎨',
     tag: 'UI/FE Dev (Vue & Tailwind)',
   },
+  {
+    id: 'user-ui-2',
+    name: 'Febian',
+    email: 'febian@majastic.internal',
+    password: process.env.TEAM_PASSWORD || 'majastic123',
+    role: 'UI_FE',
+    avatar: '🎨',
+    tag: 'UI/UX Designer',
+  },
+  {
+    id: 'user-biz-2',
+    name: 'Nova',
+    email: 'nova@majastic.internal',
+    password: process.env.TEAM_PASSWORD || 'majastic123',
+    role: 'BUSINESS',
+    avatar: '📊',
+    tag: 'Product / Business',
+  },
 ];
 
 export const INITIAL_PROJECTS: Project[] = [
